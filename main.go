@@ -12,7 +12,11 @@ import (
 
 func main() {
 	file := os.Args[0]
-	dir := file[:strings.LastIndex(file, "/")]
+	dir := "."
+	index := strings.LastIndex(file, "/")
+	if index != -1 {
+		dir = file[:index]
+	}
 
 	config_path := dir + "/config"
 	conf, err := config.LoadConfig(config_path)
