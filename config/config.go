@@ -7,41 +7,33 @@ import (
 	"strings"
 )
 
-var default_resource_dir = "/var/www/ribbon"
+var default_resource_dir = "/var/www/ribbon/"
 var default_soket = "/var/run/ribbon.sock"
 
-type Config struct {
-	values map[string]string
-}
+var values map[string]string
 
-func new_config() Config {
-	var config = Config{}
-	config.values = make(map[string]string)
-	return config
-}
-
-func (config Config) keys() []string {
-	keys := make([]string, 0, len(config.values))
-	for k := range config.values {
+func keys() []string {
+	keys := make([]string, 0, len(values))
+	for k := range values {
 		keys = append(keys, k)
 	}
 	return keys
 }
 
-func (config Config) set(key, value string) {
-	config.values[key] = value
+func set(key, value string) {
+	values[key] = value
 }
 
-func (config Config) Get(key string) string {
-	return config.values[key]
+func Get(key string) string {
+	return values[key]
 }
 
-func LoadConfig(path string) (Config, error) {
-	config := new_config()
+func LoadConfig(path string) error {
+	values = make(map[string]string)
 
 	file, err := os.Open(path)
 	if err != nil {
-		return Config{}, err
+		return err
 	}
 	reader := bufio.NewReader(file)
 
@@ -51,34 +43,34 @@ func LoadConfig(path string) (Config, error) {
 			if err.Error() == "EOF" {
 				break
 			}
-			return Config{}, err
+			return err
 		}
 
 		tokens := strings.Split(string(bytes), "=")
-		config.set(strings.Trim(tokens[0], " "), strings.Trim(tokens[1], " "))
+		set(strings.Trim(tokens[0], " "), strings.Trim(tokens[1], " "))
 	}
 
-	return config, nil
+	return nil
 }
 
-func CreateConfig(path string) Config {
-	config := new_config()
+func CreateConfig(path string) {
+	values = make(map[string]string)
 
 	input := enter_config("a resource directory", default_resource_dir)
-	config.set("resource_dir", input)
+	set("resource_dir", input)
 	input = enter_config("path to listening socket", default_soket)
-	config.set("socket_path", input)
+	set("socket_path", input)
 
-	write_config(path, config)
-	return config
+	write_config(path)
 }
 
-func write_config(path string, config Config) {
+func write_config(path string) {
+	fmt.Printf("Saving config to %s", path)
 	var content = ""
 
-	config_keys := config.keys()
+	config_keys := keys()
 	for i := 0; i < len(config_keys); i++ {
-		content += config_keys[i] + " = " + config.Get(config_keys[i]) + "\n"
+		content += config_keys[i] + " = " + Get(config_keys[i]) + "\n"
 	}
 
 	err := os.WriteFile(path, []byte(content), 0770)

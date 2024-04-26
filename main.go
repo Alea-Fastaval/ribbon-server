@@ -18,8 +18,8 @@ func main() {
 		dir = file[:index]
 	}
 
-	config_path := dir + "/config"
-	conf, err := config.LoadConfig(config_path)
+	config_path := dir + "/ribbon-server.conf"
+	err := config.LoadConfig(config_path)
 	if err != nil {
 		fmt.Println("Could not open config file: " + config_path)
 		fmt.Println(err.Error())
@@ -28,7 +28,7 @@ func main() {
 		var input string
 		fmt.Scanln(&input)
 		if input == "Y" || input == "y" || input == "" {
-			conf = config.CreateConfig(config_path)
+			config.CreateConfig(config_path)
 		} else {
 			fmt.Println("Can't continue without a configuration file, closing server")
 			os.Exit(1)
@@ -36,10 +36,10 @@ func main() {
 	}
 
 	// Config test
-	fmt.Printf("Resouce directory: %s\n", conf.Get("resource_dir"))
+	fmt.Printf("Resouce directory: %s\n", config.Get("resource_dir"))
 
 	var ribbon_server = server.Server{}
-	ribbon_server.Start(conf.Get("socket_path"))
+	ribbon_server.Start(config.Get("socket_path"))
 
 	channel := make(chan os.Signal, 1)
 	signal.Notify(channel, os.Interrupt)
