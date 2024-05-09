@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/dreamspawn/ribbon-server/config"
+	"github.com/dreamspawn/ribbon-server/database"
 	"github.com/dreamspawn/ribbon-server/render"
 	"github.com/dreamspawn/ribbon-server/server"
 	"github.com/dreamspawn/ribbon-server/translations"
@@ -42,6 +43,8 @@ func main() {
 
 	// Config test
 	fmt.Printf("Resouce directory: %s\n", config.Get("resource_dir"))
+
+	database.Connect()
 
 	var ribbon_server = server.Server{}
 	ribbon_server.Start(config.Get("socket_path"))
