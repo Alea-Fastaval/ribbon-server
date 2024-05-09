@@ -63,7 +63,7 @@ func LoadConfig(path string) error {
 		}
 
 		tokens := strings.Split(string(bytes), "=")
-		set(strings.Trim(tokens[0], " "), strings.Trim(tokens[1], " "))
+		set(strings.Trim(tokens[0], " \t"), strings.Trim(tokens[1], " \t"))
 	}
 
 	return nil
