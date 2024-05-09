@@ -7,8 +7,24 @@ import (
 	"strings"
 )
 
-var default_resource_dir = "/var/www/ribbon/"
-var default_soket = "/var/run/ribbon.sock"
+var defaults = map[string][2]string{
+	"resource_dir": {
+		"a resource directory",
+		"/var/www/ribbon/",
+	},
+	"socket_path": {
+		"path to listening socket",
+		"/var/run/ribbon.sock",
+	},
+	"admin_slug": {
+		"prefix for admin pages",
+		"backroom",
+	},
+	"fallback_lang": {
+		"default language code",
+		"da",
+	},
+}
 
 var values map[string]string
 
@@ -56,16 +72,16 @@ func LoadConfig(path string) error {
 func CreateConfig(path string) {
 	values = make(map[string]string)
 
-	input := enter_config("a resource directory", default_resource_dir)
-	set("resource_dir", input)
-	input = enter_config("path to listening socket", default_soket)
-	set("socket_path", input)
+	for key, info := range defaults {
+		input := enter_config(info[0], info[1])
+		set(key, input)
+	}
 
 	write_config(path)
 }
 
 func write_config(path string) {
-	fmt.Printf("Saving config to %s", path)
+	fmt.Printf("Saving config to %s\n", path)
 	var content = ""
 
 	config_keys := keys()
