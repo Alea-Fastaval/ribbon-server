@@ -7,7 +7,9 @@ import (
 	"strings"
 
 	"github.com/dreamspawn/ribbon-server/config"
+	"github.com/dreamspawn/ribbon-server/render"
 	"github.com/dreamspawn/ribbon-server/server"
+	"github.com/dreamspawn/ribbon-server/translations"
 )
 
 func main() {
@@ -34,6 +36,9 @@ func main() {
 			os.Exit(1)
 		}
 	}
+	server.ConfigReady()
+	render.ConfigReady()
+	translations.ConfigReady()
 
 	// Config test
 	fmt.Printf("Resouce directory: %s\n", config.Get("resource_dir"))
