@@ -1,15 +1,18 @@
 package server
 
 import (
+	"io"
 	"net/http"
 	"net/url"
 	"strings"
 
 	"github.com/dreamspawn/ribbon-server/admin"
+	"github.com/dreamspawn/ribbon-server/api"
 	"github.com/dreamspawn/ribbon-server/config"
 	"github.com/dreamspawn/ribbon-server/render"
 	"github.com/dreamspawn/ribbon-server/server/page"
 	"github.com/dreamspawn/ribbon-server/server/svg"
+	"github.com/dreamspawn/ribbon-server/translations"
 )
 
 var admin_slug string
@@ -26,8 +29,6 @@ type RequestHandler struct {
 }
 
 func (handler RequestHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
-	writer.Header().Set("Content-Type", "text/html; charset=utf-8")
-
 	var query url.Values
 	switch request.Method {
 	case "GET":
@@ -37,6 +38,18 @@ func (handler RequestHandler) ServeHTTP(writer http.ResponseWriter, request *htt
 	// io.WriteString(writer, "Fastaval Ribbon Machine\n")
 	// path := request.URL.Path
 	// query := request.URL.RawQuery
+
+	// Handle API calls
+	api_endpoint, found := strings.CutPrefix(request.URL.Path, "/api/")
+	if found {
+		writer.Header().Set("Content-Type", "application/json; charset=utf-8")
+		json := api.Handle(api_endpoint, query)
+		io.WriteString(writer, json)
+		return
+	}
+
+	// Hadnle standard page
+	writer.Header().Set("Content-Type", "text/html; charset=utf-8")
 
 	page := new(page.Page)
 	page.Lang = fallback_lang
@@ -52,7 +65,21 @@ func (handler RequestHandler) ServeHTTP(writer http.ResponseWriter, request *htt
 		page.AddTitle("[Admin] Fastaval Ribbon Server")
 	} else {
 		// User pages
-		page.SetContent(svg.GetSVGTest(query))
+		var page_content string
+		translations.Load("general", page.Lang)
+		headline := translations.Get(page.Lang, "general", "headline")
+
+		main_tmpl := render.LoadTemplate("main-content.tmpl")
+		page_content = render.TemplateString(
+			main_tmpl,
+			map[string]string{
+				"headline": headline,
+			},
+		)
+
+		page_content += svg.GetSVGTest(query)
+
+		page.SetContent(page_content)
 		page.AddTitle("Fastaval Ribbon Server")
 	}
 
