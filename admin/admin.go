@@ -7,6 +7,8 @@ import (
 )
 
 func BuildAdminPage(path string, page *page.Page) {
+	page.AddJS("admin.js")
+
 	data := make(map[string]interface{})
 	lang := page.Lang
 

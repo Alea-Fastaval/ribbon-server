@@ -48,16 +48,22 @@ func (handler RequestHandler) ServeHTTP(writer http.ResponseWriter, request *htt
 		return
 	}
 
-	// Hadnle standard page
+	// Handle standard page
 	writer.Header().Set("Content-Type", "text/html; charset=utf-8")
 
 	page := new(page.Page)
 	page.Lang = fallback_lang
+
 	page.AddCSS("main.css")
+	page.AddCSS("fontawesome.css")
+
+	page.AddJS("jquery-3.7.1.js")
+	page.AddJS("render.js")
 
 	// Parse template files
 	root_tmpl := render.LoadTemplate("root.tmpl")
 
+	// Check for admin slug and make sure it's either seperated with "/" or end of path
 	admin_page, found := strings.CutPrefix(request.URL.Path, "/"+admin_slug)
 	if found && (admin_page == "" || strings.HasPrefix(admin_page, "/")) {
 		// Admin pages
