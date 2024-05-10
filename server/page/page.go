@@ -35,14 +35,37 @@ func (page *Page) AddCSS(path string) {
 		mod_time := fmt.Sprintf("?v=%d", info.ModTime().Unix())
 		path += mod_time
 	} else {
-		fmt.Printf("There was an error laoding file info for file: %s\n%+v", resource_dir+path, err)
+		fmt.Printf("There was an error loading file info for file: %s\n%+v", resource_dir+path, err)
 	}
 
-	main_css_header := header{
+	css_header := header{
 		"Type":  "css",
 		"Value": path,
 	}
-	page.Headers = append(page.Headers, main_css_header)
+	page.Headers = append(page.Headers, css_header)
+}
+
+func (page *Page) AddJS(path string) {
+	path = "/public/js/" + path
+	path += get_file_version(path)
+
+	js_header := header{
+		"Type":  "js",
+		"Value": path,
+	}
+	page.Headers = append(page.Headers, js_header)
+}
+
+func get_file_version(path string) string {
+	info, err := os.Stat(resource_dir + path)
+
+	if err != nil {
+		fmt.Printf("There was an error loading file info for file: %s\n%+v", resource_dir+path, err)
+		return ""
+	}
+
+	mod_time := fmt.Sprintf("?v=%d", info.ModTime().Unix())
+	return mod_time
 }
 
 func (page Page) GetHeaders() []header {
