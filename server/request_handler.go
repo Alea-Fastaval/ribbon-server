@@ -43,7 +43,7 @@ func (handler RequestHandler) ServeHTTP(writer http.ResponseWriter, request *htt
 	api_endpoint, found := strings.CutPrefix(request.URL.Path, "/api/")
 	if found {
 		writer.Header().Set("Content-Type", "application/json; charset=utf-8")
-		json := api.Handle(api_endpoint, query)
+		json := api.Handle(api_endpoint, query, request.Method)
 		io.WriteString(writer, json)
 		return
 	}
