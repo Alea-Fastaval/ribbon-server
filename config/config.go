@@ -84,9 +84,8 @@ func write_config(path string) {
 	fmt.Printf("Saving config to %s\n", path)
 	var content = ""
 
-	config_keys := keys()
-	for i := 0; i < len(config_keys); i++ {
-		content += config_keys[i] + " = " + Get(config_keys[i]) + "\n"
+	for _, key := range keys() {
+		content += key + " = " + Get(key) + "\n"
 	}
 
 	err := os.WriteFile(path, []byte(content), 0770)
