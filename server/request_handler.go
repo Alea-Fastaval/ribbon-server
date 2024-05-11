@@ -54,6 +54,7 @@ func (handler RequestHandler) ServeHTTP(writer http.ResponseWriter, request *htt
 	page := new(page.Page)
 	page.Lang = fallback_lang
 
+	page.AddCSS("theme.css")
 	page.AddCSS("main.css")
 	page.AddCSS("fontawesome.css")
 
