@@ -2,6 +2,7 @@ package translations
 
 import (
 	"bufio"
+	"fmt"
 	"os"
 	"strings"
 
@@ -10,6 +11,7 @@ import (
 
 var tranlations_dir string
 var fallback_lang string
+var languages []string
 
 func ConfigReady() {
 	tranlations_dir = config.Get("resource_dir") + "translations/"
@@ -66,4 +68,26 @@ func Get(lang string, set string, key string) string {
 
 func GetSet(lang string, set string) map[string]string {
 	return translations[lang][set]
+}
+
+func GetLanguages() []string {
+	if len(languages) != 0 {
+		return languages
+	}
+
+	files, err := os.ReadDir(tranlations_dir)
+	if err != nil {
+		fmt.Printf("Could not read content of folder %s\n", tranlations_dir)
+		panic(err)
+	}
+
+	for _, file := range files {
+		if !file.IsDir() {
+			continue
+		}
+
+		languages = append(languages, file.Name())
+	}
+
+	return languages
 }
