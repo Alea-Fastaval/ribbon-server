@@ -10,7 +10,8 @@ import (
 )
 
 var endpoints = map[string]func(string, url.Values, string) (any, error){
-	"categories": categoriesAPI,
+	"categories":   categoriesAPI,
+	"translations": translationsAPI,
 }
 
 func Handle(endpoint string, query url.Values, method string) string {
