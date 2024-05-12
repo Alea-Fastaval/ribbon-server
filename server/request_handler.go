@@ -61,6 +61,8 @@ func (handler RequestHandler) ServeHTTP(writer http.ResponseWriter, request *htt
 	page.AddJS("jquery-3.7.1.js")
 	page.AddJS("render.js")
 
+	translations.Load("general", page.Lang)
+
 	// Parse template files
 	root_tmpl := render.LoadTemplate("root.tmpl")
 
@@ -73,7 +75,6 @@ func (handler RequestHandler) ServeHTTP(writer http.ResponseWriter, request *htt
 	} else {
 		// User pages
 		var page_content string
-		translations.Load("general", page.Lang)
 		headline := translations.Get(page.Lang, "general", "headline")
 
 		main_tmpl := render.LoadTemplate("main-content.tmpl")
