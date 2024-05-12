@@ -1,6 +1,7 @@
 package server
 
 import (
+	"fmt"
 	"io"
 	"net/http"
 	"net/url"
@@ -29,10 +30,17 @@ type RequestHandler struct {
 }
 
 func (handler RequestHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
-	var query url.Values
+	var vars url.Values
 	switch request.Method {
 	case "GET":
-		query = request.URL.Query()
+		vars = request.URL.Query()
+	case "POST":
+		err := request.ParseForm()
+		if err != nil {
+			fmt.Print("Could not parse form data\n")
+			panic(err)
+		}
+		vars = request.Form
 	}
 
 	// io.WriteString(writer, "Fastaval Ribbon Machine\n")
@@ -43,7 +51,7 @@ func (handler RequestHandler) ServeHTTP(writer http.ResponseWriter, request *htt
 	api_endpoint, found := strings.CutPrefix(request.URL.Path, "/api/")
 	if found {
 		writer.Header().Set("Content-Type", "application/json; charset=utf-8")
-		json := api.Handle(api_endpoint, query, request.Method)
+		json := api.Handle(api_endpoint, vars, request.Method)
 		io.WriteString(writer, json)
 		return
 	}
@@ -85,7 +93,7 @@ func (handler RequestHandler) ServeHTTP(writer http.ResponseWriter, request *htt
 			},
 		)
 
-		page_content += svg.GetSVGTest(query)
+		page_content += svg.GetSVGTest(vars)
 
 		page.SetContent(page_content)
 		page.AddTitle("Fastaval Ribbon Server")
