@@ -3,10 +3,9 @@ package api
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"net/url"
 	"strings"
-
-	"github.com/dreamspawn/ribbon-server/database"
 )
 
 var endpoints = map[string]func(string, url.Values, string) (any, error){
@@ -14,16 +13,16 @@ var endpoints = map[string]func(string, url.Values, string) (any, error){
 	"translations": translationsAPI,
 }
 
-func Handle(endpoint string, query url.Values, method string) string {
+func Handle(endpoint string, vars url.Values, method string) string {
 	base, sub_path, _ := strings.Cut(endpoint, "/")
 
 	var data any
 	var err error
 
 	if function, ok := endpoints[base]; ok {
-		data, err = function(sub_path, query, method)
+		data, err = function(sub_path, vars, method)
 	} else {
-		data, err = database.Query("SELECT * FROM test", nil)
+		panic(fmt.Errorf("endpoint %s is not defined", base))
 	}
 
 	if err != nil {
