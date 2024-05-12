@@ -1,10 +1,10 @@
 package api
 
 import (
-	"errors"
 	"net/url"
 	"strings"
 
+	"github.com/dreamspawn/ribbon-server/database"
 	"github.com/dreamspawn/ribbon-server/translations"
 )
 
@@ -18,5 +18,5 @@ func translationsAPI(sub_path string, vars url.Values, method string) (any, erro
 		return translations.GetSet(lang, file), nil
 	}
 
-	return nil, errors.New("not implemented yet")
+	return database.GetTranslation(lang, key)
 }
