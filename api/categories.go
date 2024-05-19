@@ -27,6 +27,8 @@ func categoriesAPI(sub_path string, vars url.Values, method string) (any, error)
 			vars["background_color"][0],
 			vars["stripes_color"][0],
 			vars["glyph_color"][0],
+			vars["wing1_color"][0],
+			vars["wing2_color"][0],
 		)
 
 		if err != nil {

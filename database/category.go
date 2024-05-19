@@ -5,6 +5,8 @@ type Category struct {
 	Background string
 	Stripes    string
 	Glyph      string
+	Wing1      string
+	Wing2      string
 	Ordering   uint
 }
 
@@ -19,7 +21,15 @@ func GetCategories() ([]Category, error) {
 	for rows.Next() {
 		category := Category{}
 
-		err := rows.Scan(&category.ID, &category.Background, &category.Stripes, &category.Glyph, &category.Ordering)
+		err := rows.Scan(
+			&category.ID,
+			&category.Background,
+			&category.Stripes,
+			&category.Glyph,
+			&category.Wing1,
+			&category.Wing2,
+			&category.Ordering,
+		)
 		if err != nil {
 			return nil, db_error(statement, nil, err)
 		}
@@ -30,7 +40,7 @@ func GetCategories() ([]Category, error) {
 	return result, nil
 }
 
-func CreateCategory(background, stripes, glyph string) (*Category, error) {
+func CreateCategory(background, stripes, glyph, wing1, wing2 string) (*Category, error) {
 	var category_count int
 	statement := "SELECT COUNT(*) FROM categories"
 	row := db.QueryRow(statement)
@@ -39,8 +49,8 @@ func CreateCategory(background, stripes, glyph string) (*Category, error) {
 		return nil, db_error(statement, nil, err)
 	}
 
-	statement = "INSERT INTO categories(background, stripes, glyph, ordering) VALUES(?,?,?,?)"
-	result, err := db.Exec(statement, background, stripes, glyph, category_count)
+	statement = "INSERT INTO categories(background, stripes, glyph, wing1, wing2, ordering) VALUES(?,?,?,?,?,?)"
+	result, err := db.Exec(statement, background, stripes, glyph, wing1, wing2, category_count)
 	if err != nil {
 		return nil, db_error(statement, nil, err)
 	}
@@ -52,6 +62,8 @@ func CreateCategory(background, stripes, glyph string) (*Category, error) {
 		background,
 		stripes,
 		glyph,
+		wing1,
+		wing2,
 		uint(category_count),
 	}
 	return &new_category, err
