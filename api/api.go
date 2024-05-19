@@ -6,11 +6,20 @@ import (
 	"fmt"
 	"net/url"
 	"strings"
+
+	"github.com/dreamspawn/ribbon-server/config"
 )
+
+var resource_dir string
+
+func ConfigReady() {
+	resource_dir = config.Get("resource_dir")
+}
 
 var endpoints = map[string]func(string, url.Values, string) (any, error){
 	"categories":   categoriesAPI,
 	"translations": translationsAPI,
+	"glyphs":       glyphsAPI,
 }
 
 func Handle(endpoint string, vars url.Values, method string) string {

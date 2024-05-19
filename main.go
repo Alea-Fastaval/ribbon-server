@@ -6,6 +6,7 @@ import (
 	"os/signal"
 	"strings"
 
+	"github.com/dreamspawn/ribbon-server/api"
 	"github.com/dreamspawn/ribbon-server/config"
 	"github.com/dreamspawn/ribbon-server/database"
 	"github.com/dreamspawn/ribbon-server/render"
@@ -40,6 +41,7 @@ func main() {
 	server.ConfigReady()
 	render.ConfigReady()
 	translations.ConfigReady()
+	api.ConfigReady()
 
 	// Config test
 	fmt.Printf("Resouce directory: %s\n", config.Get("resource_dir"))
