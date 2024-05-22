@@ -12,8 +12,10 @@ import (
 	"github.com/dreamspawn/ribbon-server/config"
 	"github.com/dreamspawn/ribbon-server/render"
 	"github.com/dreamspawn/ribbon-server/server/page"
+	"github.com/dreamspawn/ribbon-server/server/session"
 	"github.com/dreamspawn/ribbon-server/server/svg"
 	"github.com/dreamspawn/ribbon-server/translations"
+	"github.com/dreamspawn/ribbon-server/user"
 )
 
 var admin_slug string
@@ -24,6 +26,7 @@ func ConfigReady() {
 	fallback_lang = config.Get("fallback_lang")
 
 	page.ConfigReady()
+	session.ConfigReady()
 }
 
 type RequestHandler struct {
@@ -43,15 +46,11 @@ func (handler RequestHandler) ServeHTTP(writer http.ResponseWriter, request *htt
 		vars = request.Form
 	}
 
-	// io.WriteString(writer, "Fastaval Ribbon Machine\n")
-	// path := request.URL.Path
-	// query := request.URL.RawQuery
-
 	// Handle API calls
 	api_endpoint, found := strings.CutPrefix(request.URL.Path, "/api/")
 	if found {
 		writer.Header().Set("Content-Type", "application/json; charset=utf-8")
-		json := api.Handle(api_endpoint, vars, request.Method)
+		json := api.Handle(api_endpoint, vars, *request)
 		io.WriteString(writer, json)
 		return
 	}
@@ -62,31 +61,72 @@ func (handler RequestHandler) ServeHTTP(writer http.ResponseWriter, request *htt
 	page := new(page.Page)
 	page.Lang = fallback_lang
 
-	page.AddCSS("theme.css")
-	page.AddCSS("main.css")
-	page.AddCSS("fontawesome.css")
+	// Add all files in general folder and sub folders
+	page.AddCSS("general")
 
+	// Add JS files
 	page.AddJS("jquery-3.7.1.js")
 	page.AddJS("render.js")
 
+	// Get general translations
 	translations.Load("general", page.Lang)
 
-	// Parse template files
+	// Get the root template
 	root_tmpl := render.LoadTemplate("root.tmpl")
 
-	// Check for admin slug and make sure it's either seperated with "/" or end of path
-	admin_page, found := strings.CutPrefix(request.URL.Path, "/"+admin_slug)
-	if found && (admin_page == "" || strings.HasPrefix(admin_page, "/")) {
+	// Get session and user
+	session := session.Open(writer, *request)
+	session_user := session.GetUser()
+
+	_, logout := vars["logout"]
+	if logout {
+		session.Delete(writer)
+		session_user = nil
+	}
+
+	if session_user == nil {
+		message := ""
+		if request.Method == "POST" && !logout {
+			session_user = user.TryLogin(vars)
+			if session_user == nil {
+				message = translations.Get(page.Lang, "general", "login_error")
+			} else {
+				session.SetUser(*session_user)
+			}
+		}
+		if session_user == nil {
+			// Login page
+			login_tmpl := render.LoadTemplate("login.tmpl")
+			page_content := render.TemplateString(
+				login_tmpl,
+				map[string]string{
+					"message":   message,
+					"action":    request.URL.Path,
+					"headline":  translations.Get(page.Lang, "general", "headline"),
+					"user_name": translations.Get(page.Lang, "general", "user_name"),
+					"password":  translations.Get(page.Lang, "general", "password"),
+					"login":     translations.Get(page.Lang, "general", "login"),
+				},
+			)
+
+			page.AddTitle("[Login] Fastaval Ribbon Server")
+			page.SetContent(page_content)
+
+			render.WriteTemplate(root_tmpl, writer, page)
+			return
+		}
+	}
+
+	if admin_page, found := strings.CutPrefix(request.URL.Path, "/"+admin_slug); found && (admin_page == "" || strings.HasPrefix(admin_page, "/")) {
 		// Admin pages
-		admin.BuildAdminPage(admin_page, page)
+		admin.BuildAdminPage(admin_page, page, *session_user)
 		page.AddTitle("[Admin] Fastaval Ribbon Server")
 	} else {
 		// User pages
-		var page_content string
 		headline := translations.Get(page.Lang, "general", "headline")
 
 		main_tmpl := render.LoadTemplate("main-content.tmpl")
-		page_content = render.TemplateString(
+		page_content := render.TemplateString(
 			main_tmpl,
 			map[string]string{
 				"headline": headline,
@@ -99,10 +139,14 @@ func (handler RequestHandler) ServeHTTP(writer http.ResponseWriter, request *htt
 		page.AddTitle("Fastaval Ribbon Server")
 	}
 
-	render.WriteTemplate(root_tmpl, writer, page)
+	user_header_tmpl := render.LoadTemplate("user-header.tmpl")
+	user_header := render.TemplateString(user_header_tmpl, map[string]string{
+		"name":   session_user.Name,
+		"action": request.URL.Path,
+		"logout": translations.Get(page.Lang, "general", "logout"),
+	})
 
-	// fmt.Fprintf(writer, "Path: %+v\n", path)
-	// fmt.Fprintf(writer, "Query: %+v\n", query)
-	// fmt.Fprintf(writer, "Header: %+v\n", request.Header)
-	// fmt.Fprintf(writer, "RequestURI: %+v\n", request.RequestURI)
+	page.Prepend(user_header)
+
+	render.WriteTemplate(root_tmpl, writer, page)
 }
