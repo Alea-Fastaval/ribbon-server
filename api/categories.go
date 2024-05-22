@@ -2,6 +2,7 @@ package api
 
 import (
 	"fmt"
+	"net/http"
 	"net/url"
 	"slices"
 	"strings"
@@ -9,8 +10,8 @@ import (
 	"github.com/dreamspawn/ribbon-server/database"
 )
 
-func categoriesAPI(sub_path string, vars url.Values, method string) (any, error) {
-	if method == "GET" {
+func categoriesAPI(sub_path string, vars url.Values, request http.Request) (any, error) {
+	if request.Method == "GET" {
 		categories, err := database.GetCategories()
 		if err != nil {
 			return categories, err
@@ -22,7 +23,7 @@ func categoriesAPI(sub_path string, vars url.Values, method string) (any, error)
 		return categories, nil
 	}
 
-	if method == "POST" {
+	if request.Method == "POST" {
 		new_category, err := database.CreateCategory(
 			vars["background_color"][0],
 			vars["stripes_color"][0],
@@ -46,5 +47,5 @@ func categoriesAPI(sub_path string, vars url.Values, method string) (any, error)
 		return new_category, err
 	}
 
-	return nil, fmt.Errorf("endpoint not implemented for method %s", method)
+	return nil, fmt.Errorf("endpoint not implemented for method %s", request.Method)
 }

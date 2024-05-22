@@ -1,6 +1,7 @@
 package api
 
 import (
+	"net/http"
 	"net/url"
 	"strings"
 
@@ -8,7 +9,7 @@ import (
 	"github.com/dreamspawn/ribbon-server/translations"
 )
 
-func translationsAPI(sub_path string, vars url.Values, method string) (any, error) {
+func translationsAPI(sub_path string, vars url.Values, request http.Request) (any, error) {
 	if sub_path == "languages" {
 		return translations.GetLanguages(), nil
 	}
