@@ -2,6 +2,7 @@ package page
 
 import (
 	"fmt"
+	"io/fs"
 	"os"
 
 	"github.com/dreamspawn/ribbon-server/config"
@@ -29,9 +30,41 @@ func (page *Page) AddTitle(page_title string) {
 }
 
 func (page *Page) AddCSS(path string) {
-	path = "public/css/" + path
-	path += get_file_version(path)
+	external_path := "public/css/" + path
+	local_path := resource_dir + external_path
+	info, err := os.Stat(local_path)
 
+	if err != nil {
+		fmt.Printf("There was an error loading file info for file: %s\n%+v\n", resource_dir+path, err)
+	}
+
+	if info.IsDir() {
+		file_system := os.DirFS(resource_dir)
+		fs.WalkDir(file_system, external_path, func(path string, file fs.DirEntry, err error) error {
+			if err != nil {
+				return err
+			}
+
+			if file.IsDir() {
+				return nil
+			}
+
+			info, err := file.Info()
+			if err != nil {
+				return err
+			}
+
+			add_css_header(page, info, path)
+			return nil
+		})
+		return
+	}
+
+	add_css_header(page, info, external_path)
+}
+
+func add_css_header(page *Page, info os.FileInfo, path string) {
+	path += fmt.Sprintf("?v=%d", info.ModTime().Unix())
 	page.Headers = append(page.Headers, header{
 		"Type":  "css",
 		"Value": path,
@@ -66,4 +99,8 @@ func (page Page) GetHeaders() []header {
 
 func (page *Page) SetContent(content string) {
 	page.Content = content
+}
+
+func (page *Page) Prepend(content string) {
+	page.Content = content + page.Content
 }
