@@ -96,6 +96,9 @@ func (handler RequestHandler) ServeHTTP(writer http.ResponseWriter, request *htt
 		}
 		if session_user == nil {
 			// Login page
+			page.AddTitle("[Login] Fastaval Ribbon Server")
+			page.AddCSS("login.css")
+
 			login_tmpl := render.LoadTemplate("login.tmpl")
 			page_content := render.TemplateString(
 				login_tmpl,
@@ -108,10 +111,7 @@ func (handler RequestHandler) ServeHTTP(writer http.ResponseWriter, request *htt
 					"login":     translations.Get(page.Lang, "general", "login"),
 				},
 			)
-
-			page.AddTitle("[Login] Fastaval Ribbon Server")
 			page.SetContent(page_content)
-
 			render.WriteTemplate(root_tmpl, writer, page)
 			return
 		}
