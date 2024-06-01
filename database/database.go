@@ -3,6 +3,7 @@ package database
 import (
 	"database/sql"
 	"fmt"
+	"strings"
 
 	"github.com/dreamspawn/ribbon-server/config"
 	"github.com/go-sql-driver/mysql"
@@ -11,11 +12,17 @@ import (
 var db *sql.DB
 
 func Connect() {
+	net := "tcp"
+	address := config.Get("db_address")
+	if strings.HasSuffix(address, ".sock") {
+		net = "unix"
+	}
+
 	db_config := mysql.Config{
 		User:   config.Get("db_user"),
 		Passwd: config.Get("db_pass"),
-		Net:    "unix",
-		Addr:   "/var/run/mysqld/mysqld.sock",
+		Net:    net,
+		Addr:   address,
 		DBName: config.Get("db_name"),
 	}
 
