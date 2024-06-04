@@ -29,3 +29,18 @@ func TryLogin(vars url.Values) *User {
 	}
 	return &test
 }
+
+func (user *User) CheckAccess(base, sub, method string) bool {
+	// TODO return true for any endpoint allowed for even anonymous users
+
+	if user == nil {
+		return false
+	}
+
+	if user.IsAdmin {
+		return true
+	}
+
+	// TODO maybe more detailed user permissions
+	return false
+}
