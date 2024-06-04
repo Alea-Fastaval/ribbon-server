@@ -2,7 +2,6 @@ package server
 
 import (
 	"fmt"
-	"io"
 	"net/http"
 	"net/url"
 	"strings"
@@ -49,9 +48,7 @@ func (handler RequestHandler) ServeHTTP(writer http.ResponseWriter, request *htt
 	// Handle API calls
 	api_endpoint, found := strings.CutPrefix(request.URL.Path, "/api/")
 	if found {
-		writer.Header().Set("Content-Type", "application/json; charset=utf-8")
-		json := api.Handle(api_endpoint, vars, *request)
-		io.WriteString(writer, json)
+		api.Handle(api_endpoint, vars, *request, writer)
 		return
 	}
 
