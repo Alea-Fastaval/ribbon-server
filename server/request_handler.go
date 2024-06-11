@@ -114,13 +114,23 @@ func (handler RequestHandler) ServeHTTP(writer http.ResponseWriter, request *htt
 		}
 	}
 
+	link := ""
 	if admin_page, found := strings.CutPrefix(request.URL.Path, "/"+admin_slug); found && (admin_page == "" || strings.HasPrefix(admin_page, "/")) {
 		// Admin pages
+		standard_link_text := translations.Get(page.Lang, "general", "standard_link_text")
+		link = fmt.Sprintf(`<a href="/">%s</a>`, standard_link_text)
+
 		admin.BuildAdminPage(admin_page, page, *session_user)
 		page.AddTitle("[Admin] Fastaval Ribbon Server")
 	} else {
 		// User pages
 		headline := translations.Get(page.Lang, "general", "headline")
+
+		// Add link to admin page if user is logged in as admin
+		if session_user.IsAdmin {
+			admin_link_text := translations.Get(page.Lang, "general", "admin_link_text")
+			link = fmt.Sprintf(`<a href="/%s">%s</a>`, admin_slug, admin_link_text)
+		}
 
 		main_tmpl := render.LoadTemplate("main-content.tmpl")
 		page_content := render.TemplateString(
@@ -141,6 +151,7 @@ func (handler RequestHandler) ServeHTTP(writer http.ResponseWriter, request *htt
 		"name":   session_user.Name,
 		"action": request.URL.Path,
 		"logout": translations.Get(page.Lang, "general", "logout"),
+		"link":   link,
 	})
 
 	page.Prepend(user_header)
