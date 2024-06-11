@@ -25,7 +25,7 @@ var hmac_key []byte
 
 func ConfigReady() {
 	resource_dir = config.Get("resource_dir")
-	set_hmac_key(resource_dir + "/keys/hmac.key")
+	set_hmac_key(resource_dir + "keys/hmac.key")
 }
 
 var endpoints = map[string]func(string, url.Values, http.Request) (any, error){
@@ -54,13 +54,21 @@ func Handle(endpoint string, vars url.Values, request http.Request, writer http.
 			err = array[1].(error)
 		}
 
+		message_array := strings.Split(message, "\n")
+		message_string := fmt.Sprintf("%#v", message_array)
+		message_string = strings.ReplaceAll(message_string, "[]string{", "")
+		message_string = strings.ReplaceAll(message_string, "}", "")
+		message_string = strings.ReplaceAll(message_string, `", "`, "\",\n\"")
+
 		response := fmt.Sprintf(
 			`{
 				"status" : "error",
-				"message" : "%s",
+				"message" : [%s],
 				"error": "%+v"
-			}`, message, err,
+			}`, message_string, err,
 		)
+
+		writer.Header().Set("Content-Type", "application/json; charset=utf-8")
 		io.WriteString(writer, response)
 	}()
 
