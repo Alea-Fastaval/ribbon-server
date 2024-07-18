@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/signal"
 	"strings"
+	"syscall"
 
 	"github.com/dreamspawn/ribbon-server/api"
 	"github.com/dreamspawn/ribbon-server/config"
@@ -56,7 +57,7 @@ func main() {
 	ribbon_server.Start(config.Get("socket_path"))
 
 	channel := make(chan os.Signal, 1)
-	signal.Notify(channel, os.Interrupt)
+	signal.Notify(channel, os.Interrupt, syscall.SIGTERM)
 	<-channel
 
 	ribbon_server.Stop()
