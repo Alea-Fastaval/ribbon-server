@@ -54,20 +54,33 @@ func Handle(endpoint string, vars url.Values, request http.Request, writer http.
 			err = array[1].(error)
 		}
 
+		var message_string, padding string
+
 		message_array := strings.Split(message, "\n")
-		message_string := fmt.Sprintf("%#v", message_array)
-		message_string = strings.ReplaceAll(message_string, "[]string{", "")
-		message_string = strings.ReplaceAll(message_string, "}", "")
-		message_string = strings.ReplaceAll(message_string, `", "`, "\",\n\"")
+		for _, line := range message_array {
+			message_string += padding
+			message_string += fmt.Sprintf(`"%s"`, line)
+			padding = ",\n"
+		}
+
+		padding = ""
+		error_string := ""
+		error_array := strings.Split(fmt.Sprintf("%v", err), "\n")
+		for _, line := range error_array {
+			error_string += padding
+			error_string += fmt.Sprintf(`"%s"`, line)
+			padding = ",\n"
+		}
 
 		response := fmt.Sprintf(
 			`{
 				"status" : "error",
 				"message" : [%s],
-				"error": "%+v"
-			}`, message_string, err,
+				"error": [%s]
+			}`, message_string, error_string,
 		)
 
+		writer.WriteHeader(400)
 		writer.Header().Set("Content-Type", "application/json; charset=utf-8")
 		io.WriteString(writer, response)
 	}()
