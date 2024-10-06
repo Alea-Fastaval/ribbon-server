@@ -32,6 +32,7 @@ var endpoints = map[string]func(string, url.Values, http.Request) (any, error){
 	"categories":   categoriesAPI,
 	"translations": translationsAPI,
 	"glyphs":       glyphsAPI,
+	"ribbons":      ribbonsAPI,
 }
 
 func Handle(endpoint string, vars url.Values, request http.Request, writer http.ResponseWriter) {
