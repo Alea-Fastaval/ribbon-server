@@ -13,13 +13,22 @@ func CreateRibbon(category uint, glyph uint, no_wings bool) (*Ribbon, error) {
 	row := db.QueryRow(statement, category)
 	err := row.Scan(&ribbon_count)
 	if err != nil {
-		return nil, db_error(statement, nil, err)
+		args := []any{
+			category,
+		}
+		return nil, db_error(statement, args, err)
 	}
 
 	statement = "INSERT INTO ribbons(category_id, glyph_id, no_wings, ordering) VALUES(?,?,?,?)"
 	result, err := db.Exec(statement, category, glyph, no_wings, ribbon_count)
 	if err != nil {
-		return nil, db_error(statement, nil, err)
+		args := []any{
+			category,
+			glyph,
+			no_wings,
+			ribbon_count,
+		}
+		return nil, db_error(statement, args, err)
 	}
 
 	id, err := result.LastInsertId()
