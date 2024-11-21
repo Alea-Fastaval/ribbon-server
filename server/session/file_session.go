@@ -16,7 +16,7 @@ import (
 )
 
 const session_name = "RibbonSession"
-const session_prefix = ""
+const session_prefix = "standard-session-"
 
 var session_folder string
 
