@@ -10,7 +10,19 @@ import (
 	"github.com/dreamspawn/ribbon-server/database"
 )
 
+// /api/ribbons
 func ribbonsAPI(sub_path string, vars url.Values, request http.Request) (any, error) {
+	//--------------------------------------------------------------------------------------------------------------------
+	// GET
+	//--------------------------------------------------------------------------------------------------------------------
+	if request.Method == "GET" {
+		result := []any{}
+		return result, nil
+	}
+
+	//--------------------------------------------------------------------------------------------------------------------
+	// POST
+	//--------------------------------------------------------------------------------------------------------------------
 	if request.Method == "POST" {
 		true_string := map[string]bool{
 			"t":    true,
@@ -19,18 +31,35 @@ func ribbonsAPI(sub_path string, vars url.Values, request http.Request) (any, er
 			"yes":  true,
 		}
 
-		cat_id, _ := strconv.ParseUint(vars["category"][0], 10, 32)
-		glyph_id, _ := strconv.ParseUint(vars["glyph"][0], 10, 32)
+		var cat_id uint64
+		if cat, ok := vars["category"]; ok {
+			cat_id, _ = strconv.ParseUint(cat[0], 10, 32)
+		} else {
+			api_error("missing parameter: category", nil)
+		}
+
+		var glyph_id uint64
+		if glyph, ok := vars["glyph"]; ok {
+			glyph_id, _ = strconv.ParseUint(glyph[0], 10, 32)
+		} else {
+			api_error("missing parameter: glyph", nil)
+		}
+
+		var no_wings bool
+		if nowings, ok := vars["no_wings"]; ok {
+			no_wings = true_string[strings.ToLower(nowings[0])]
+		} else {
+			no_wings = false
+		}
 
 		new_ribbon, err := database.CreateRibbon(
 			uint(cat_id),
 			uint(glyph_id),
-			true_string[strings.ToLower(vars["no_wings"][0])],
+			no_wings,
 		)
 
 		if err != nil {
-			fmt.Printf("Failed to create new category with values %+v\n", vars)
-			panic(err)
+			api_error(fmt.Sprintf("Failed to create new ribbon with values %+v\n", vars), err)
 		}
 
 		for key, value := range vars {
