@@ -207,8 +207,14 @@ func Handle(endpoint string, vars url.Values, request http.Request, writer http.
 }
 
 func api_error(message string, err error) {
-	log.Output(2, message)
-	log.Output(2, err.Error())
+	log.Output(2, "API ERROR MSG: "+message)
+
+	if err != nil {
+		log.Output(2, "API ERROR:"+err.Error())
+	} else {
+		err = fmt.Errorf("nil")
+	}
+
 	panic([]interface{}{
 		message,
 		err,
