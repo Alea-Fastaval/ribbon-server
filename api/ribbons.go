@@ -16,7 +16,16 @@ func ribbonsAPI(sub_path string, vars url.Values, request http.Request) (any, er
 	// GET
 	//--------------------------------------------------------------------------------------------------------------------
 	if request.Method == "GET" {
-		result := []any{}
+		ribbons, err := database.GetRibbons()
+		if err != nil {
+			api_error("could not load ribbons from database", nil)
+		}
+
+		result := make(map[uint][]database.Ribbon)
+		for _, ribbon := range ribbons {
+			result[ribbon.Category] = append(result[ribbon.Category], ribbon)
+		}
+
 		return result, nil
 	}
 
@@ -64,10 +73,10 @@ func ribbonsAPI(sub_path string, vars url.Values, request http.Request) (any, er
 
 		for key, value := range vars {
 			if lang, found := strings.CutPrefix(key, "name_"); found {
-				database.AddTranslation(lang, "ribbon."+fmt.Sprint(new_ribbon.ID)+".name", value[0])
+				database.AddTranslation(lang, "ribbons."+fmt.Sprint(new_ribbon.ID)+".name", value[0])
 			}
 			if lang, found := strings.CutPrefix(key, "desc_"); found {
-				database.AddTranslation(lang, "ribbon."+fmt.Sprint(new_ribbon.ID)+".desc", value[0])
+				database.AddTranslation(lang, "ribbons."+fmt.Sprint(new_ribbon.ID)+".desc", value[0])
 			}
 		}
 

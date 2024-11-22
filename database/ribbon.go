@@ -5,10 +5,14 @@ type Ribbon struct {
 	Category uint
 	Glyph    uint
 	NoWings  bool
+	Ordering uint
 }
 
+// ----------------------------------------------------------------------------------------------------------------------
+// Create
+// ----------------------------------------------------------------------------------------------------------------------
 func CreateRibbon(category uint, glyph uint, no_wings bool) (*Ribbon, error) {
-	var ribbon_count int
+	var ribbon_count uint
 	statement := "SELECT COUNT(*) FROM ribbons WHERE category_id = ?"
 	row := db.QueryRow(statement, category)
 	err := row.Scan(&ribbon_count)
@@ -37,7 +41,41 @@ func CreateRibbon(category uint, glyph uint, no_wings bool) (*Ribbon, error) {
 		category,
 		glyph,
 		no_wings,
+		ribbon_count,
 	}
 
 	return &new_ribbon, err
+}
+
+// ----------------------------------------------------------------------------------------------------------------------
+// Read
+// ----------------------------------------------------------------------------------------------------------------------
+func GetRibbons() ([]Ribbon, error) {
+	statement := "SELECT * FROM ribbons ORDER BY ordering"
+	rows, err := db.Query(statement)
+	if err != nil {
+		return nil, err
+	}
+
+	var result []Ribbon
+
+	for rows.Next() {
+		ribbon := Ribbon{}
+
+		err := rows.Scan(
+			&ribbon.ID,
+			&ribbon.Category,
+			&ribbon.Glyph,
+			&ribbon.NoWings,
+			&ribbon.Ordering,
+		)
+
+		if err != nil {
+			return nil, db_error(statement, nil, err)
+		}
+
+		result = append(result, ribbon)
+	}
+
+	return result, nil
 }
