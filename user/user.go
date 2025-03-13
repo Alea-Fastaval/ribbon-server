@@ -1,6 +1,10 @@
 package user
 
-import "net/url"
+import (
+	"net/url"
+
+	"github.com/dreamspawn/ribbon-server/connect"
+)
 
 type User struct {
 	ID      uint
@@ -27,7 +31,18 @@ func TryLogin(vars url.Values) *User {
 	if vars["user-name"][0] == "Admin" {
 		return &admin
 	}
-	return &test
+
+	result := connect.GetUser(vars["user-name"][0], vars["password"][0])
+
+	if result == nil || result["status"] == "error" {
+		return nil
+	}
+
+	return &User{
+		ID:      2,
+		IsAdmin: false,
+		Name:    result["name"],
+	}
 }
 
 func (user *User) CheckAccess(base, sub, method string) bool {
