@@ -120,7 +120,19 @@ func (handler RequestHandler) ServeHTTP(writer http.ResponseWriter, request *htt
 		standard_link_text := translations.Get(page.Lang, "general", "standard_link_text")
 		link = fmt.Sprintf(`<a href="/">%s</a>`, standard_link_text)
 
-		admin.BuildAdminPage(admin_page, page, *session_user)
+		if session_user.IsAdmin {
+			admin.BuildAdminPage(admin_page, page)
+		} else {
+			// Access denied
+			translations.Load("general", page.Lang)
+			page_tmpl := render.LoadTemplate("admin/no-access.tmpl")
+			content := render.TemplateString(page_tmpl, map[string]string{
+				"headline": translations.Get(page.Lang, "general", "no_access_headline"),
+				"message":  translations.Get(page.Lang, "general", "no_access_message"),
+			})
+			page.SetContent(content)
+		}
+
 		page.AddTitle("[Admin] Fastaval Ribbon Server")
 	} else {
 		// User pages
