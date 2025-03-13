@@ -17,4 +17,5 @@ func Init() {
 	}
 
 	log.SetOutput(logfile)
+	log.SetFlags(log.Ldate | log.Ltime)
 }
