@@ -20,7 +20,25 @@ func ConfigReady() {
 
 var translations map[string]map[string]map[string]string
 
-func Load(name string, lang string) error {
+func LoadAll() {
+	for _, lang := range GetLanguages() {
+		files, err := os.ReadDir(tranlations_dir + lang + "/")
+		if err != nil {
+			fmt.Printf("Could not read content of folder %s\n", tranlations_dir+lang+"/")
+			panic(err)
+		}
+
+		for _, file := range files {
+			if file.IsDir() {
+				continue
+			}
+
+			load(file.Name(), lang)
+		}
+	}
+}
+
+func load(file_name string, lang string) error {
 	// Initialize Map
 	if translations == nil {
 		translations = make(map[string]map[string]map[string]string)
@@ -31,11 +49,11 @@ func Load(name string, lang string) error {
 	}
 
 	// open translation file
-	path := tranlations_dir + lang + "/" + name + ".txt"
+	path := tranlations_dir + lang + "/" + file_name
 	file, err := os.Open(path)
 	if err != nil {
 		// Try fallback language file
-		path = tranlations_dir + fallback_lang + "/" + name + ".txt"
+		path = tranlations_dir + fallback_lang + "/" + file_name
 		file, err = os.Open(path)
 		if err != nil {
 			return err
@@ -57,7 +75,8 @@ func Load(name string, lang string) error {
 		translation_set[key] = translation
 	}
 
-	translations[lang][name] = translation_set
+	parts := strings.Split(file_name, ".")
+	translations[lang][parts[0]] = translation_set
 
 	return nil
 }
@@ -71,10 +90,14 @@ func GetSet(lang string, set string) map[string]string {
 }
 
 func GetLanguages() []string {
-	if len(languages) != 0 {
-		return languages
+	if len(languages) == 0 {
+		loadLanguages()
 	}
 
+	return languages
+}
+
+func loadLanguages() {
 	files, err := os.ReadDir(tranlations_dir)
 	if err != nil {
 		fmt.Printf("Could not read content of folder %s\n", tranlations_dir)
@@ -88,6 +111,4 @@ func GetLanguages() []string {
 
 		languages = append(languages, file.Name())
 	}
-
-	return languages
 }

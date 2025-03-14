@@ -65,9 +65,6 @@ func (handler RequestHandler) ServeHTTP(writer http.ResponseWriter, request *htt
 	page.AddJS("jquery-3.7.1.js")
 	page.AddJS("render.js")
 
-	// Get general translations
-	translations.Load("general", page.Lang)
-
 	// Get the root template
 	root_tmpl := render.LoadTemplate("root.tmpl")
 
@@ -124,7 +121,6 @@ func (handler RequestHandler) ServeHTTP(writer http.ResponseWriter, request *htt
 			admin.BuildAdminPage(admin_page, page)
 		} else {
 			// Access denied
-			translations.Load("general", page.Lang)
 			page_tmpl := render.LoadTemplate("admin/no-access.tmpl")
 			content := render.TemplateString(page_tmpl, map[string]string{
 				"headline": translations.Get(page.Lang, "general", "no_access_headline"),

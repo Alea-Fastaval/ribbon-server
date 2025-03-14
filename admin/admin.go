@@ -7,8 +7,6 @@ import (
 )
 
 func BuildAdminPage(path string, page *page.Page) {
-	translations.Load("admin", page.Lang)
-
 	page.AddCSS("admin.css")
 	page.AddJS("admin.js")
 

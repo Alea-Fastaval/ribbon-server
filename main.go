@@ -45,8 +45,9 @@ func main() {
 
 	server.ConfigReady()
 	render.ConfigReady()
-	translations.ConfigReady()
 	api.ConfigReady()
+	translations.ConfigReady()
+	translations.LoadAll()
 
 	// Config test
 	fmt.Printf("Resouce directory: %s\n", config.Get("resource_dir"))
