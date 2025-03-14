@@ -12,7 +12,6 @@ import (
 	"github.com/dreamspawn/ribbon-server/render"
 	"github.com/dreamspawn/ribbon-server/server/page"
 	"github.com/dreamspawn/ribbon-server/server/session"
-	"github.com/dreamspawn/ribbon-server/server/svg"
 	"github.com/dreamspawn/ribbon-server/translations"
 	"github.com/dreamspawn/ribbon-server/user"
 )
@@ -133,6 +132,8 @@ func (handler RequestHandler) ServeHTTP(writer http.ResponseWriter, request *htt
 	} else {
 		// User pages
 		headline := translations.Get(page.Lang, "general", "headline")
+		page.AddJS("common.js")
+		page.AddJS("user.js")
 
 		// Add link to admin page if user is logged in as admin
 		if session_user.IsAdmin {
@@ -140,7 +141,7 @@ func (handler RequestHandler) ServeHTTP(writer http.ResponseWriter, request *htt
 			link = fmt.Sprintf(`<a href="/%s">%s</a>`, admin_slug, admin_link_text)
 		}
 
-		main_tmpl := render.LoadTemplate("main-content.tmpl")
+		main_tmpl := render.LoadTemplate("user-page.tmpl")
 		page_content := render.TemplateString(
 			main_tmpl,
 			map[string]string{
@@ -148,7 +149,7 @@ func (handler RequestHandler) ServeHTTP(writer http.ResponseWriter, request *htt
 			},
 		)
 
-		page_content += svg.GetSVGTest(vars)
+		//page_content += svg.GetSVGTest(vars)
 
 		page.SetContent(page_content)
 		page.AddTitle("Fastaval Ribbon Server")
