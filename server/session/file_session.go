@@ -9,10 +9,10 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/dreamspawn/ribbon-server/config"
 	"github.com/dreamspawn/ribbon-server/user"
-	"github.com/dreamspawn/ribbon-server/util"
 )
 
 const session_name = "RibbonSession"
@@ -53,30 +53,41 @@ func (session Session) SetUser(user user.User) {
 	write(session)
 }
 
-func Open(writer http.ResponseWriter, request http.Request) Session {
-	session := Session{}
-	session.values = make(map[string]string)
-
+func Check(request http.Request) *Session {
 	session_cookie, err := request.Cookie(session_name)
 	if errors.Is(err, http.ErrNoCookie) {
-		session.id = create_new()
-
-		cookie := http.Cookie{
-			Name:     session_name,
-			Value:    session.id,
-			MaxAge:   0,
-			Secure:   true,
-			HttpOnly: true,
-			SameSite: http.SameSiteLaxMode,
-		}
-
-		http.SetCookie(writer, &cookie)
-		return session
+		return nil
 	}
 
-	session.id = session_cookie.Value
-	load_from_file(&session)
-	return session
+	return load_from_file(session_cookie.Value)
+}
+
+func Start(writer http.ResponseWriter, request http.Request) *Session {
+	// Get session cookie
+	session_cookie, err := request.Cookie(session_name)
+	if err == nil {
+		session := load_from_file(session_cookie.Value)
+		if session != nil {
+			return session
+		}
+	}
+
+	// Create new session cookie
+	cookie := http.Cookie{
+		Name:     session_name,
+		Value:    create_new(),
+		MaxAge:   0,
+		Secure:   true,
+		HttpOnly: true,
+		SameSite: http.SameSiteLaxMode,
+	}
+	http.SetCookie(writer, &cookie)
+
+	// Return new empty session
+	return &Session{
+		id:     cookie.Value,
+		values: make(map[string]string),
+	}
 }
 
 func (session Session) Save() {
@@ -119,23 +130,16 @@ func create_new() string {
 	return filepath.Base(file.Name())
 }
 
-func load_from_file(session *Session) {
-	filepath := session_folder + session.id
+func load_from_file(id string) *Session {
+	filepath := session_folder + id
 	file, err := os.Open(filepath)
 
-	// Create new session file if old one is gone
+	// If file is gone, session is expired
 	if err != nil {
-		file, err = os.Create(filepath)
-		if err != nil {
-			fmt.Printf("Could not create new session file %s\n", filepath)
-			panic(err)
-		}
-
-		file.Close()
-		util.SetOwner(filepath)
-		return
+		return nil
 	}
 
+	values := make(map[string]string)
 	reader := bufio.NewReader(file)
 	for {
 		bytes, _, err := reader.ReadLine()
@@ -145,11 +149,18 @@ func load_from_file(session *Session) {
 			}
 			fmt.Printf("Error reading session file %s\n", filepath)
 			fmt.Printf("err: %v\n", err)
-			return
+			return nil
 		}
 
 		tokens := strings.Split(string(bytes), " ")
-		session.values[tokens[0]] = tokens[1]
+		values[tokens[0]] = tokens[1]
+	}
+
+	os.Chtimes(filepath, time.Time{}, time.Now())
+
+	return &Session{
+		id:     id,
+		values: values,
 	}
 }
 

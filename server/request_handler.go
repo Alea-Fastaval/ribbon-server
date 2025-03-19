@@ -67,26 +67,31 @@ func (handler RequestHandler) ServeHTTP(writer http.ResponseWriter, request *htt
 	// Get the root template
 	root_tmpl := render.LoadTemplate("root.tmpl")
 
-	// Get session and user
-	session := session.Open(writer, *request)
-	session_user := session.GetUser()
+	// Check for existing current_session
+	current_session := session.Check(*request)
 
 	_, logout := vars["logout"]
-	if logout {
-		session.Delete(writer)
-		session_user = nil
+	if logout && current_session != nil {
+		current_session.Delete(writer)
+		current_session = nil
 	}
 
-	if session_user == nil {
+	if current_session == nil {
 		message := ""
+		var session_user *user.User = nil
+
+		// Are we trying to log in
 		if request.Method == "POST" && !logout {
 			session_user = user.TryLogin(vars)
 			if session_user == nil {
 				message = translations.Get(page.Lang, "general", "login_error")
 			} else {
-				session.SetUser(*session_user)
+				current_session = session.Start(writer, *request)
+				current_session.SetUser(*session_user)
 			}
 		}
+
+		// We are not logged in
 		if session_user == nil {
 			// Login page
 			page.AddTitle("[Login] Fastaval Ribbon Server")
@@ -109,6 +114,9 @@ func (handler RequestHandler) ServeHTTP(writer http.ResponseWriter, request *htt
 			return
 		}
 	}
+
+	// We are logged in and have a valid session
+	session_user := current_session.GetUser()
 
 	link := ""
 	if admin_page, found := strings.CutPrefix(request.URL.Path, "/"+admin_slug); found && (admin_page == "" || strings.HasPrefix(admin_page, "/")) {
