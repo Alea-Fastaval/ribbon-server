@@ -3,6 +3,7 @@ package translations
 import (
 	"bufio"
 	"fmt"
+	"log"
 	"os"
 	"strings"
 
@@ -71,7 +72,14 @@ func load(file_name string, lang string) error {
 			return err
 		}
 
-		key, translation, _ := strings.Cut(string(bytes), " ")
+		line := string(bytes)
+
+		// Allow comments
+		if line == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+
+		key, translation, _ := strings.Cut(line, " ")
 		translation_set[key] = translation
 	}
 
@@ -82,7 +90,13 @@ func load(file_name string, lang string) error {
 }
 
 func Get(lang string, set string, key string) string {
-	return translations[lang][set][key]
+	translation, found := translations[lang][set][key]
+	if !found {
+		translation = "Missing translation (" + key + ")"
+		log.Output(2, "Missing translation for Lang:"+lang+" Set:"+set+" Key:"+key+"\n")
+	}
+
+	return translation
 }
 
 func GetSet(lang string, set string) map[string]string {
