@@ -76,6 +76,15 @@ func Query(statement string, args []any) ([]map[string]interface{}, error) {
 	return result, nil
 }
 
+func Exec(query string, args []any) (sql.Result, error) {
+	result, err := db.Exec(query, args...)
+	if err != nil {
+		return result, db_error(query, args, err)
+	}
+
+	return result, nil
+}
+
 func db_error(statement string, args []any, err error) error {
 	return fmt.Errorf("failed to exceute query:\n%s\nwith the arguments:\n%+v\nerror:\n%v", statement, args, err)
 }
