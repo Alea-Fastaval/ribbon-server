@@ -131,9 +131,15 @@ func (handler RequestHandler) ServeHTTP(writer http.ResponseWriter, request *htt
 		page.AddTitle("[Admin] Fastaval Ribbon Server")
 	} else {
 		// User pages
-		headline := translations.Get(page.Lang, "general", "headline")
+
+		// Style
+		page.AddCSS("user.css")
+
+		// Scripts
 		page.AddJS("common.js")
 		page.AddJS("user.js")
+
+		headline := translations.Get(page.Lang, "general", "headline")
 
 		// Add link to admin page if user is logged in as admin
 		if session_user.IsAdmin {
@@ -141,9 +147,10 @@ func (handler RequestHandler) ServeHTTP(writer http.ResponseWriter, request *htt
 			link = fmt.Sprintf(`<a href="/%s">%s</a>`, admin_slug, admin_link_text)
 		}
 
-		main_tmpl := render.LoadTemplate("user-page.tmpl")
+		// Main content
+		user_tmpl := render.LoadTemplate("user-page.tmpl")
 		page_content := render.TemplateString(
-			main_tmpl,
+			user_tmpl,
 			map[string]string{
 				"headline": headline,
 			},
