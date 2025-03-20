@@ -2,15 +2,26 @@ package connect
 
 import (
 	"encoding/json"
+	"fmt"
+	"log"
 	"net/http"
 	"net/url"
+
+	"github.com/dreamspawn/ribbon-server/config"
 )
+
+var infosys_api string
+
+func ConfigReady() {
+	infosys_api = config.Get("infosys_api")
+}
 
 func GetUser(id string, pass string) map[string]string {
 	result := make(map[string]string)
 
-	response, err := http.PostForm("https://infosys.fastaval.dk/api/ribbon/login", url.Values{"id": {id}, "pass": {pass}})
+	response, err := http.PostForm(infosys_api, url.Values{"id": {id}, "pass": {pass}})
 	if err != nil || response.StatusCode != 200 {
+		log.Output(1, fmt.Sprintf("Login error: %+v\nResponse: %+v\n", err, response))
 		return nil
 	}
 
@@ -27,17 +38,11 @@ func GetUser(id string, pass string) map[string]string {
 		"email",
 	}
 
-	// fmt.Printf("Status: %+v\n", response.Status)
-	// fmt.Printf("Headers: %+v\n", response.Header)
-	// fmt.Printf("GetUser data: %+v\n", data)
-
 	for _, field := range fields {
 		if value, ok := data[field].(string); ok {
 			result[field] = value
 		}
 	}
-
-	// fmt.Printf("GetUser result: %+v\n", result)
 
 	return result
 }

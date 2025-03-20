@@ -9,6 +9,7 @@ import (
 
 	"github.com/dreamspawn/ribbon-server/api"
 	"github.com/dreamspawn/ribbon-server/config"
+	"github.com/dreamspawn/ribbon-server/connect"
 	"github.com/dreamspawn/ribbon-server/database"
 	"github.com/dreamspawn/ribbon-server/log"
 	"github.com/dreamspawn/ribbon-server/render"
@@ -44,6 +45,7 @@ func main() {
 	log.Init()
 
 	server.ConfigReady()
+	connect.ConfigReady()
 	render.ConfigReady()
 	api.ConfigReady()
 	translations.ConfigReady()
