@@ -48,6 +48,8 @@ func Handle(endpoint string, vars url.Values, request http.Request, writer http.
 			return
 		}
 
+		log.Output(1, fmt.Sprintf("API error handler: %+v\n", result))
+
 		var message string
 		var err error
 
@@ -148,12 +150,12 @@ func Handle(endpoint string, vars url.Values, request http.Request, writer http.
 		}
 	} else {
 		// Get user from session
-		session := session.Open(writer, request)
+		session := session.Check(request)
 		current_user = session.GetUser()
 	}
 
 	if !current_user.CheckAccess(base, sub_path, request.Method) {
-		api_error(fmt.Sprintf("User %s does not have access to %s at %s", current_user.Name, request.Method, endpoint), nil)
+		api_error(fmt.Sprintf("User %s does not have access to %s at %s", current_user.GetName(), request.Method, endpoint), nil)
 	}
 
 	//-----------------------------------------------------

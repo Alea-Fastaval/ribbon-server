@@ -23,6 +23,36 @@ var admin = User{
 	0, true, "Admin",
 }
 
+func (user *User) GetName() string {
+	if user == nil {
+		return "<anonymous>"
+	}
+	return user.Name
+}
+
+func (user *User) CheckAccess(base, sub, method string) bool {
+	// TODO return true for any endpoint allowed for even anonymous users
+
+	if user == nil {
+		return false
+	}
+
+	if user.IsAdmin {
+		return true
+	}
+
+	if base == "orders" {
+		return true
+	}
+
+	if method == "GET" {
+		return true
+	}
+
+	// TODO maybe more detailed user permissions
+	return false
+}
+
 func Load(id uint) *User {
 	if id == 0 {
 		return &admin
@@ -69,29 +99,6 @@ func TryLogin(vars url.Values) *User {
 	}
 
 	return user
-}
-
-func (user *User) CheckAccess(base, sub, method string) bool {
-	// TODO return true for any endpoint allowed for even anonymous users
-
-	if user == nil {
-		return false
-	}
-
-	if user.IsAdmin {
-		return true
-	}
-
-	if method == "GET" {
-		return true
-	}
-
-	if base == "orders" {
-		return true
-	}
-
-	// TODO maybe more detailed user permissions
-	return false
 }
 
 func loadWithUserIDFromDB(uid uint) (*User, error) {

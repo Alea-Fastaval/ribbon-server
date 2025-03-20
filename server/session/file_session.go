@@ -33,7 +33,11 @@ func (session Session) Get(key string) string {
 	return session.values[key]
 }
 
-func (session Session) GetUser() *user.User {
+func (session *Session) GetUser() *user.User {
+	if session == nil {
+		return nil
+	}
+
 	user_id_string := session.values["user-id"]
 	if user_id_string == "" {
 		return nil
@@ -76,6 +80,7 @@ func Start(writer http.ResponseWriter, request http.Request) *Session {
 	cookie := http.Cookie{
 		Name:     session_name,
 		Value:    create_new(),
+		Path:     "/",
 		MaxAge:   0,
 		Secure:   true,
 		HttpOnly: true,
