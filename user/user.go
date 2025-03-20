@@ -86,6 +86,10 @@ func (user *User) CheckAccess(base, sub, method string) bool {
 		return true
 	}
 
+	if base == "orders" {
+		return true
+	}
+
 	// TODO maybe more detailed user permissions
 	return false
 }
