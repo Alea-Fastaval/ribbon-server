@@ -48,14 +48,15 @@ func Handle(endpoint string, vars url.Values, request http.Request, writer http.
 			return
 		}
 
-		log.Output(1, fmt.Sprintf("API error handler: %+v\n", result))
-
 		var message string
 		var err error
 
 		if array, ok := result.([]interface{}); ok {
 			message = array[0].(string)
 			err = array[1].(error)
+		} else {
+			// Log non-API errors
+			log.Output(1, fmt.Sprintf("API error handler: %+v\n", result))
 		}
 
 		var message_string, padding string
