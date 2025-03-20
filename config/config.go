@@ -100,7 +100,7 @@ func enter_config(description, default_value string) string {
 	var input string
 	fmt.Scanln(&input)
 	if input == "" {
-		input = default_value
+		return default_value
 	}
 	return input
 }

@@ -13,11 +13,11 @@ import (
 // /api/orders
 func ordersAPI(sub_path string, vars url.Values, request http.Request) (any, error) {
 	current_session := session.Check(request)
-	if current_session == nil {
+	user := current_session.GetUser()
+
+	if user == nil {
 		api_error("Not logged in", nil)
 	}
-
-	user := current_session.GetUser()
 
 	//--------------------------------------------------------------------------------------------------------------------
 	// GET
@@ -42,6 +42,9 @@ func ordersAPI(sub_path string, vars url.Values, request http.Request) (any, err
 	// POST
 	//--------------------------------------------------------------------------------------------------------------------
 	if request.Method == "POST" {
+		if user.IsAdmin {
+			api_error("Admin cannot order ribbons", nil)
+		}
 
 		var ribbon_id uint64
 		if ribbon, ok := vars["ribbon"]; ok {
