@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/dreamspawn/ribbon-server/database"
+	"github.com/dreamspawn/ribbon-server/translations"
 )
 
 // /api/ribbons
@@ -81,6 +82,50 @@ func ribbonsAPI(sub_path string, vars url.Values, request http.Request) (any, er
 		}
 
 		return new_ribbon, err
+	}
+
+	//--------------------------------------------------------------------------------------------------------------------
+	// DELETE
+	//--------------------------------------------------------------------------------------------------------------------
+	if request.Method == "DELETE" {
+		ribbon_id, err := strconv.ParseUint(sub_path, 10, 32)
+		if err != nil {
+			api_error("missing ribbon id in url", err)
+		}
+
+		err = database.DeleteRibbon(uint(ribbon_id))
+		if err != nil {
+			api_error(fmt.Sprintf("error trying to delete ribbon with ID: %d\n", ribbon_id), err)
+		}
+
+		trans_errors := make(map[string]error)
+		for _, lang := range translations.GetLanguages() {
+			err = database.DeleteTranslation(lang, fmt.Sprintf("ribbons.%d.name", ribbon_id))
+			if err != nil {
+				key := fmt.Sprintf("name %s", lang)
+				trans_errors[key] = err
+			}
+			err = database.DeleteTranslation(lang, fmt.Sprintf("ribbons.%d.desc", ribbon_id))
+			if err != nil {
+				key := fmt.Sprintf("desc %s", lang)
+				trans_errors[key] = err
+			}
+		}
+
+		if len(trans_errors) != 0 {
+			var err error
+			message := "there was an error deleting translations for the following entries:"
+			for key, e := range trans_errors {
+				message += fmt.Sprintf("<%s>", key)
+				err = e
+			}
+			api_error(message, err)
+		}
+
+		return map[string]string{
+			"status":  "success",
+			"message": fmt.Sprintf("ribbon %d deleted", ribbon_id),
+		}, nil
 	}
 
 	return nil, fmt.Errorf("endpoint not implemented for method %s", request.Method)

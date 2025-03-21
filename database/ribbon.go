@@ -79,3 +79,12 @@ func GetRibbons() ([]Ribbon, error) {
 
 	return result, nil
 }
+
+// ----------------------------------------------------------------------------------------------------------------------
+// Delete
+// ----------------------------------------------------------------------------------------------------------------------
+func DeleteRibbon(id uint) error {
+	query := "DELETE FROM ribbons WHERE id = ?"
+	_, err := Exec(query, []any{id})
+	return err
+}

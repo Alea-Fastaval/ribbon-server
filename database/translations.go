@@ -9,6 +9,13 @@ func AddTranslation(lang string, label string, value string) error {
 	return err
 }
 
+func DeleteTranslation(lang, label string) error {
+	statement := "DELETE FROM translations WHERE lang = ? AND label = ?"
+	_, err := db.Exec(statement, lang, label)
+
+	return err
+}
+
 func GetTranslation(lang string, key string) (map[string]interface{}, error) {
 	key = strings.ReplaceAll(key, "*", "%")
 	statement := "SELECT label, string FROM translations WHERE lang = ? AND label LIKE ?"
