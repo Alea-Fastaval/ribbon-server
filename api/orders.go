@@ -43,7 +43,7 @@ func ordersAPI(sub_path string, vars url.Values, request http.Request) (any, err
 	//--------------------------------------------------------------------------------------------------------------------
 	if request.Method == "POST" {
 		if user.IsAdmin {
-			api_error("Admin cannot order ribbons", nil)
+			api_error("Admin cannot order ribbons (yet)", nil)
 		}
 
 		var ribbon_id uint64
@@ -87,6 +87,35 @@ func ordersAPI(sub_path string, vars url.Values, request http.Request) (any, err
 		return map[string]string{
 			"status":  "success",
 			"message": "ribbon order set",
+		}, nil
+	}
+
+	//--------------------------------------------------------------------------------------------------------------------
+	// DELETE
+	//--------------------------------------------------------------------------------------------------------------------
+	if request.Method == "DELETE" {
+		if user.IsAdmin {
+			api_error("Admin cannot delete ribbons (yet)", nil)
+		}
+
+		//fmt.Printf("Delete order path:%s", sub_path)
+		ribbon_id, err := strconv.ParseUint(sub_path, 10, 32)
+		if err != nil {
+			api_error("missing ribbon id in url", err)
+		}
+
+		err = database.DeleteOrder(
+			uint(user.ID),
+			uint(ribbon_id),
+		)
+
+		if err != nil {
+			api_error(fmt.Sprintf("Failed to delete ribbon order with values %+v\n", vars), err)
+		}
+
+		return map[string]string{
+			"status":  "success",
+			"message": "ribbon order deleted",
 		}, nil
 	}
 
