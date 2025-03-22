@@ -164,8 +164,6 @@ func (handler RequestHandler) ServeHTTP(writer http.ResponseWriter, request *htt
 			},
 		)
 
-		//page_content += svg.GetSVGTest(vars)
-
 		page.SetContent(page_content)
 		page.AddTitle("Fastaval Ribbon Server")
 	}
