@@ -13,6 +13,11 @@ import (
 
 // /api/ribbons
 func ribbonsAPI(sub_path string, vars url.Values, request http.Request) (any, error) {
+	sub_section, sub_adress, _ := strings.Cut(sub_path, "/")
+	if sub_section == "svg" {
+		return svgAPI(sub_adress, vars, request)
+	}
+
 	//--------------------------------------------------------------------------------------------------------------------
 	// GET
 	//--------------------------------------------------------------------------------------------------------------------

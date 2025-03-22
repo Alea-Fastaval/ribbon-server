@@ -1,5 +1,10 @@
 package database
 
+import (
+	"database/sql"
+	"errors"
+)
+
 type Ribbon struct {
 	ID       uint
 	Category uint
@@ -80,6 +85,29 @@ func GetRibbons() ([]Ribbon, error) {
 	return result, nil
 }
 
+func GetRibbon(id uint) (*Ribbon, error) {
+	statement := "SELECT * FROM ribbons WHERE id = ?"
+	row := db.QueryRow(statement, id)
+
+	ribbon := Ribbon{}
+	err := row.Scan(
+		&ribbon.ID,
+		&ribbon.Category,
+		&ribbon.Glyph,
+		&ribbon.NoWings,
+		&ribbon.Ordering,
+	)
+
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil
+		}
+		return nil, db_error(statement, nil, err)
+	}
+
+	return &ribbon, nil
+}
+
 // ----------------------------------------------------------------------------------------------------------------------
 // Delete
 // ----------------------------------------------------------------------------------------------------------------------
@@ -87,4 +115,8 @@ func DeleteRibbon(id uint) error {
 	query := "DELETE FROM ribbons WHERE id = ?"
 	_, err := Exec(query, []any{id})
 	return err
+}
+
+func (ribbon Ribbon) GetCategory() (*Category, error) {
+	return GetCategory(ribbon.Category)
 }

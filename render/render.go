@@ -11,16 +11,16 @@ import (
 	"github.com/dreamspawn/ribbon-server/config"
 )
 
-var tmpl_dir string
+var tmpl_folder string
 
 func ConfigReady() {
-	tmpl_dir = config.Get("resource_dir") + "templates/"
+	tmpl_folder = config.Get("resource_dir") + "templates/"
 }
 
 func LoadTemplate(path string) *template.Template {
-	template, err := template.ParseFiles(tmpl_dir + path)
+	template, err := template.ParseFiles(tmpl_folder + path)
 	if err != nil {
-		fmt.Printf("Could not parse template file %s\n", tmpl_dir+path)
+		fmt.Printf("Could not parse template file %s\n", tmpl_folder+path)
 		panic(err)
 	}
 
@@ -45,9 +45,8 @@ func TemplateString(template *template.Template, data any) string {
 	return string_builder.String()
 }
 
-func FindSeniorityTemplate(years int) *template.Template {
-	seniority_folder := "seniority/"
-	path := tmpl_dir + seniority_folder
+func FindYearTemplate(years int, sub_folder string) *template.Template {
+	path := tmpl_folder + sub_folder + "/"
 	files, err := os.ReadDir(path)
 	if err != nil {
 		fmt.Printf("Could not read content of folder %s\n", path)
@@ -55,8 +54,8 @@ func FindSeniorityTemplate(years int) *template.Template {
 	}
 
 	max := 0
-	for i := 0; i < len(files); i++ {
-		name, found := strings.CutSuffix(files[i].Name(), ".tmpl")
+	for _, file := range files {
+		name, found := strings.CutSuffix(file.Name(), ".tmpl")
 		if !found {
 			continue
 		}
@@ -73,9 +72,8 @@ func FindSeniorityTemplate(years int) *template.Template {
 	}
 
 	if max == 0 {
-		fmt.Printf("Could not find any template for %d years in folder %s\n", years, path)
 		return nil
 	}
 
-	return LoadTemplate(fmt.Sprintf("%s%d.tmpl", seniority_folder, max))
+	return LoadTemplate(fmt.Sprintf("%s/%d.tmpl", sub_folder, max))
 }

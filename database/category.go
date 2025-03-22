@@ -1,5 +1,10 @@
 package database
 
+import (
+	"database/sql"
+	"errors"
+)
+
 type Category struct {
 	ID         uint
 	Background string
@@ -38,6 +43,31 @@ func GetCategories() ([]Category, error) {
 	}
 
 	return result, nil
+}
+
+func GetCategory(id uint) (*Category, error) {
+	statement := "SELECT * FROM categories WHERE id = ?"
+	row := db.QueryRow(statement, id)
+
+	category := Category{}
+	err := row.Scan(
+		&category.ID,
+		&category.Background,
+		&category.Stripes,
+		&category.Glyph,
+		&category.Wing1,
+		&category.Wing2,
+		&category.Ordering,
+	)
+
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil
+		}
+		return nil, db_error(statement, nil, err)
+	}
+
+	return &category, nil
 }
 
 func CreateCategory(background, stripes, glyph, wing1, wing2 string) (*Category, error) {
