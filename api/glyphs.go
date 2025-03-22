@@ -25,6 +25,7 @@ func glyphsAPI(sub_path string, vars url.Values, request http.Request) (any, err
 			return data, err
 		}
 
+		// Load specific glyph
 		glyph_id, err := strconv.ParseUint(sub_path, 10, 64)
 		if err != nil {
 			return fmt.Sprintf("Could not convert \"%s\" into an unsigned int for id", sub_path), err
@@ -35,7 +36,6 @@ func glyphsAPI(sub_path string, vars url.Values, request http.Request) (any, err
 			return fmt.Sprintf("Could not read glyph with id:%d from the database", glyph_id), err
 		}
 
-		// Load specific glyph
 		data := make(map[string]string)
 		if var_fg, ok := vars["fg"]; ok {
 			data["foreground"] = var_fg[0]
