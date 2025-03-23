@@ -3,6 +3,8 @@ package database
 import (
 	"database/sql"
 	"errors"
+	"fmt"
+	"log"
 )
 
 type Ribbon struct {
@@ -11,6 +13,7 @@ type Ribbon struct {
 	Glyph    uint
 	NoWings  bool
 	Ordering uint
+	Special  map[string]string
 }
 
 // ----------------------------------------------------------------------------------------------------------------------
@@ -47,6 +50,7 @@ func CreateRibbon(category uint, glyph uint, no_wings bool) (*Ribbon, error) {
 		glyph,
 		no_wings,
 		ribbon_count,
+		nil,
 	}
 
 	return &new_ribbon, err
@@ -75,6 +79,8 @@ func GetRibbons() ([]Ribbon, error) {
 			&ribbon.Ordering,
 		)
 
+		ribbon.Special = getSpecial(ribbon.ID)
+
 		if err != nil {
 			return nil, db_error(statement, nil, err)
 		}
@@ -98,6 +104,8 @@ func GetRibbon(id uint) (*Ribbon, error) {
 		&ribbon.Ordering,
 	)
 
+	ribbon.Special = getSpecial(id)
+
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, nil
@@ -106,6 +114,37 @@ func GetRibbon(id uint) (*Ribbon, error) {
 	}
 
 	return &ribbon, nil
+}
+
+func getSpecial(ribbon_id uint) map[string]string {
+	query := "SELECT * FROM special_rules WHERE ribbon_id = ?"
+	result, err := Query(query, []any{ribbon_id})
+	if err != nil {
+		log.Output(1, fmt.Sprintf("Error loading special rules from DB for ribbon %d", ribbon_id))
+		return nil
+	}
+
+	if len(result) == 0 {
+		return nil
+	}
+
+	special := make(map[string]string)
+	for _, row := range result {
+		var key, value string
+		var ok bool
+		if key, ok = row["name"].(string); !ok {
+			continue
+		}
+		if value, ok = row["value"].(string); ok {
+			special[key] = value
+		}
+	}
+
+	if len(special) == 0 {
+		return nil
+	}
+
+	return special
 }
 
 // ----------------------------------------------------------------------------------------------------------------------

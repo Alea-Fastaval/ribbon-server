@@ -86,6 +86,11 @@ func svgAPI(sub_path string, vars url.Values, request http.Request) (any, error)
 		"foreground": category.Glyph,
 		"background": category.Background,
 	}
+
+	if color, ok := ribbon.Special["glyph_color"]; ok {
+		glyph_data["foreground"] = color
+	}
+
 	glyph_template := render.LoadTemplate(glyph.File)
 	svg_data["glyph"] = render.TemplateString(glyph_template, glyph_data)
 
