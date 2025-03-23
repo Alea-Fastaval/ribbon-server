@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 
 	"github.com/dreamspawn/ribbon-server/database"
 	"github.com/dreamspawn/ribbon-server/render"
@@ -62,6 +63,19 @@ func svgAPI(sub_path string, vars url.Values, request http.Request) (any, error)
 	if err == nil {
 		years += leader
 		wing_color = category.Wing1
+	}
+
+	if wings, ok := ribbon.Special["always_wings"]; ok {
+		wing_info := strings.Split(wings, ",")
+		if wing_info[0] == "1" {
+			wing_color = category.Wing1
+		} else {
+			wing_color = category.Wing2
+		}
+		years, err = strconv.ParseInt(wing_info[1], 0, 0)
+		if err != nil {
+			years = 0
+		}
 	}
 
 	if years > 0 {
