@@ -156,7 +156,6 @@ func DeleteOrder(uid, ribbon uint) error {
 }
 
 func SetColumns(uid, columns uint) error {
-	fmt.Printf("Setting columns to %d for user %d\n", columns, uid)
 	query := "UPDATE users SET columns = ? WHERE id = ?"
 	_, err := Exec(query, []any{columns, uid})
 	return err
