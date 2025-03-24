@@ -160,3 +160,9 @@ func SetColumns(uid, columns uint) error {
 	_, err := Exec(query, []any{columns, uid})
 	return err
 }
+
+func SetStatus(uid uint, status string) error {
+	query := "UPDATE users SET status = ? WHERE id = ?"
+	_, err := Exec(query, []any{status, uid})
+	return err
+}

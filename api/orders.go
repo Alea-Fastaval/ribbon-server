@@ -62,6 +62,21 @@ func ordersAPI(sub_path string, vars url.Values, request http.Request) (any, err
 			}
 		}
 
+		if sub_path == "status" {
+			if status := vars.Get("value"); status != "" {
+				err := database.SetStatus(user.ID, status)
+				if err != nil {
+					api_error(fmt.Sprintf("error setting order status for user: %d", user.ID), err)
+				}
+				return map[string]string{
+					"status":  "success",
+					"message": "status set",
+				}, nil
+			} else {
+				api_error("missing parameter: value", nil)
+			}
+		}
+
 		var ribbon_id uint64
 		if ribbon, ok := vars["ribbon"]; ok {
 			ribbon_id, _ = strconv.ParseUint(ribbon[0], 10, 32)
