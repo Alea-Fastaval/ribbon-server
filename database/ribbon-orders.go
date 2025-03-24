@@ -2,6 +2,7 @@ package database
 
 import (
 	"fmt"
+	"log"
 	"strings"
 )
 
@@ -93,19 +94,36 @@ func update(uid, ribbon uint, values map[string]uint, old_position int64) error 
 	return err
 }
 
-func GetOrders(uid uint) (map[uint]map[string]interface{}, error) {
+func GetOrders(uid uint) (map[string]any, error) {
 	query := "SELECT * FROM ribbon_orders WHERE user_id = ?"
 	result, err := Query(query, []any{uid})
 	if err != nil {
 		return nil, err
 	}
 
-	orders := make(map[uint]map[string]interface{})
+	orders := make(map[uint]map[string]any)
 	for _, row := range result {
 		orders[uint(row["ribbon_id"].(int64))] = row
 	}
 
-	return orders, nil
+	query = "SELECT * FROM users WHERE id = ?"
+	result, err = Query(query, []any{uid})
+	if err != nil {
+		return nil, err
+	}
+
+	settings := make(map[string]any)
+	if len(result) != 0 {
+		settings["status"] = result[0]["status"]
+		settings["columns"] = result[0]["columns"]
+	} else {
+		log.Output(1, fmt.Sprintf("Error loading order settings for user %d", uid))
+	}
+
+	return map[string]any{
+		"list":     orders,
+		"settings": settings,
+	}, nil
 }
 
 func GetAllOrders() (map[uint]map[string]uint, error) {
@@ -135,4 +153,11 @@ func DeleteOrder(uid, ribbon uint) error {
 	}
 
 	return nil
+}
+
+func SetColumns(uid, columns uint) error {
+	fmt.Printf("Setting columns to %d for user %d\n", columns, uid)
+	query := "UPDATE users SET columns = ? WHERE id = ?"
+	_, err := Exec(query, []any{columns, uid})
+	return err
 }

@@ -129,7 +129,7 @@ func queryLoadFromDB(query string, args []any) (*User, error) {
 }
 
 func createInDB(pid, year, name, email string) *User {
-	query := "INSERT INTO users (participant_id, year, name, email) VALUES(?,?,?,?)"
+	query := "INSERT INTO users (participant_id, year, name, email, status) VALUES(?,?,?,?,'open')"
 	result, err := database.Exec(query, []any{pid, year, name, email})
 	if err != nil {
 		log.Output(2, fmt.Sprintf("Error creating new DB user: %+v\n", err))
