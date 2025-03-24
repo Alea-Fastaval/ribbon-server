@@ -7,6 +7,7 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/dreamspawn/ribbon-server/config"
 	"github.com/dreamspawn/ribbon-server/connect"
 	"github.com/dreamspawn/ribbon-server/database"
 )
@@ -72,7 +73,11 @@ func Load(id uint) *User {
 
 func TryLogin(vars url.Values) *User {
 	if vars["user-name"][0] == "Admin" {
-		return &admin
+		if vars["password"][0] != "" && vars["password"][0] == config.Get("admin_pass") {
+			return &admin
+		} else {
+			return nil
+		}
 	}
 
 	participant_id := vars["user-name"][0]
