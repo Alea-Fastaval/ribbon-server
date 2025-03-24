@@ -22,8 +22,8 @@ func insert(uid, ribbon uint, values map[string]uint) error {
 	args := []any{uid, ribbon}
 	keys := []string{
 		"grunt",
-		"leader",
 		"second",
+		"leader",
 	}
 	for _, key := range keys {
 		if value, ok := values[key]; ok {
