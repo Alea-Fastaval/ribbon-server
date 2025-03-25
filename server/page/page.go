@@ -11,15 +11,22 @@ import (
 type header map[string]string
 
 type Page struct {
-	Headers []header
-	Content string
-	Lang    string
+	Headers               []header
+	Content               string
+	Lang                  string
+	Explanation_link_text string
+	Long_explanation      string
 }
 
 var resource_dir string
 
 func ConfigReady() {
 	resource_dir = config.Get("resource_dir")
+}
+
+func (page *Page) SetExplanation(link, text string) {
+	page.Explanation_link_text = link
+	page.Long_explanation = text
 }
 
 func (page *Page) AddTitle(page_title string) {

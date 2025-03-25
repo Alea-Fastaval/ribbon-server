@@ -63,6 +63,16 @@ func (handler RequestHandler) ServeHTTP(writer http.ResponseWriter, request *htt
 	// Add JS files
 	page.AddJS("jquery-3.7.1.js")
 	page.AddJS("render.js")
+	page.AddJS("common.js")
+
+	// Add explanation text
+	link_text := translations.Get(page.Lang, "general", "explanation_button")
+	explanation_text := translations.Get(page.Lang, "general", "long_explanation1") + "<br>\n"
+	explanation_text += translations.Get(page.Lang, "general", "long_explanation2") + "<br>\n"
+	explanation_text += translations.Get(page.Lang, "general", "long_explanation3") + "<br>\n"
+	explanation_text += translations.Get(page.Lang, "general", "long_explanation4") + "<br>\n"
+	explanation_text += translations.Get(page.Lang, "general", "long_explanation5") + "<br>\n"
+	page.SetExplanation(link_text, explanation_text)
 
 	// Get the root template
 	root_tmpl := render.LoadTemplate("root.tmpl")
@@ -101,12 +111,13 @@ func (handler RequestHandler) ServeHTTP(writer http.ResponseWriter, request *htt
 			page_content := render.TemplateString(
 				login_tmpl,
 				map[string]string{
-					"message":   message,
-					"action":    request.URL.Path,
-					"headline":  translations.Get(page.Lang, "general", "headline"),
-					"user_name": translations.Get(page.Lang, "general", "user_name"),
-					"password":  translations.Get(page.Lang, "general", "password"),
-					"login":     translations.Get(page.Lang, "general", "login"),
+					"message":     message,
+					"action":      request.URL.Path,
+					"headline":    translations.Get(page.Lang, "general", "headline"),
+					"user_name":   translations.Get(page.Lang, "general", "user_name"),
+					"password":    translations.Get(page.Lang, "general", "password"),
+					"login":       translations.Get(page.Lang, "general", "login"),
+					"cookie_text": translations.Get(page.Lang, "general", "cookie_text"),
 				},
 			)
 			page.SetContent(page_content)
@@ -144,7 +155,6 @@ func (handler RequestHandler) ServeHTTP(writer http.ResponseWriter, request *htt
 		page.AddCSS("user.css")
 
 		// Scripts
-		page.AddJS("common.js")
 		page.AddJS("user.js")
 
 		headline := translations.Get(page.Lang, "general", "headline")

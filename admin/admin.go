@@ -8,7 +8,6 @@ import (
 
 func BuildAdminPage(path string, page *page.Page) {
 	page.AddCSS("admin.css")
-	page.AddJS("common.js")
 	page.AddJS("admin.js")
 
 	page_tmpl := render.LoadTemplate("admin/main.tmpl")
