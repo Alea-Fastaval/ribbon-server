@@ -32,7 +32,7 @@ func ordersAPI(sub_path string, vars url.Values, request http.Request) (any, err
 		}
 
 		if err != nil {
-			api_error("could not load orders from database", nil)
+			api_error("could not load orders from database", err)
 		}
 
 		return orders, nil

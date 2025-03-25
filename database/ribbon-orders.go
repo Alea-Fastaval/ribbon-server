@@ -126,8 +126,70 @@ func GetOrders(uid uint) (map[string]any, error) {
 	}, nil
 }
 
-func GetAllOrders() (map[uint]map[string]uint, error) {
-	return make(map[uint]map[string]uint), nil
+func GetAllOrders() (map[string]any, error) {
+	query := "SELECT * FROM ribbon_orders r JOIN users u ON r.user_id = u.id"
+	orders, err := Query(query, []any{})
+	if err != nil {
+		return nil, err
+	}
+
+	list := make(map[int64]map[int64]any)
+	for _, row := range orders {
+		year := row["year"].(int64)
+		if _, ok := list[year]; !ok {
+			list[year] = make(map[int64]any)
+		}
+
+		user_id := row["user_id"].(int64)
+		var user_rows []map[string]any
+		if user_orders, ok := list[year][user_id].([]map[string]any); ok {
+			user_rows = user_orders
+		}
+		user_rows = append(user_rows, row)
+		list[year][user_id] = user_rows
+	}
+
+	query = "SELECT year, COUNT(*) as users FROM users GROUP BY year"
+	users, err := Query(query, []any{})
+	if err != nil {
+		return nil, err
+	}
+
+	user_counts := make(map[int64]any)
+	for _, row := range users {
+		user_counts[row["year"].(int64)] = row["users"]
+	}
+
+	query = "SELECT year, COUNT(DISTINCT(user_id)) as users FROM ribbon_orders r JOIN users u ON r.user_id = u.id GROUP BY year"
+	users, err = Query(query, []any{})
+	if err != nil {
+		return nil, err
+	}
+
+	order_counts := make(map[int64]any)
+	for _, row := range users {
+		order_counts[row["year"].(int64)] = row["users"]
+	}
+
+	query = "SELECT year, COUNT(DISTINCT(user_id)) as users FROM ribbon_orders r JOIN users u ON r.user_id = u.id WHERE u.status = 'closed' GROUP BY year"
+	users, err = Query(query, []any{})
+	if err != nil {
+		return nil, err
+	}
+
+	closed_counts := make(map[int64]any)
+	for _, row := range users {
+		closed_counts[row["year"].(int64)] = row["users"]
+	}
+
+	return map[string]any{
+		"list": list,
+		"counts": map[string]any{
+			"users":  user_counts,
+			"orders": order_counts,
+			"closed": closed_counts,
+		},
+	}, nil
 }
 
 func DeleteOrder(uid, ribbon uint) error {
