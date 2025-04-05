@@ -15,14 +15,15 @@ import (
 var ErrNoUserFound = errors.New("no user found")
 
 type User struct {
-	ID      uint
-	IsAdmin bool
-	Name    string
-	Status  string
+	ID            uint
+	ParticipantID uint
+	IsAdmin       bool
+	Name          string
+	Status        string
 }
 
 var admin = User{
-	0, true, "Admin", "",
+	0, 0, true, "Admin", "",
 }
 
 func (user *User) GetName() string {
@@ -128,14 +129,15 @@ func queryLoadFromDB(query string, args []any) (*User, error) {
 	}
 
 	return &User{
-		ID:      uint(result[0]["id"].(int64)),
-		Name:    result[0]["name"].(string),
-		IsAdmin: false,
+		ID:            uint(result[0]["id"].(int64)),
+		ParticipantID: uint(result[0]["participant_id"].(int64)),
+		Name:          result[0]["name"].(string),
+		IsAdmin:       false,
 	}, nil
 }
 
 func GetAllFromYear(year int) ([]User, error) {
-	query := "SELECT * FROM users WHERE year = ?"
+	query := "SELECT * FROM users WHERE year = ? ORDER BY participant_id ASC"
 
 	result, err := database.Query(query, []any{year})
 	if err != nil {
@@ -149,10 +151,11 @@ func GetAllFromYear(year int) ([]User, error) {
 	var list []User
 	for _, row := range result {
 		list = append(list, User{
-			ID:      uint(row["id"].(int64)),
-			Name:    row["name"].(string),
-			IsAdmin: false,
-			Status:  row["status"].(string),
+			ID:            uint(row["id"].(int64)),
+			ParticipantID: uint(result[0]["participant_id"].(int64)),
+			Name:          row["name"].(string),
+			IsAdmin:       false,
+			Status:        row["status"].(string),
 		})
 	}
 

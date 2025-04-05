@@ -6,15 +6,16 @@ import (
 
 	"codeberg.org/go-pdf/fpdf"
 	"github.com/dreamspawn/ribbon-server/database"
+	"github.com/dreamspawn/ribbon-server/user"
 )
 
 var ribbon_width = 25.0
 var ribbon_height = 10.0
 
-func UserCollection(uid uint, name string, pdf *fpdf.Fpdf) error {
-	collection, err := database.GetOrders(uid)
+func UserCollection(user user.User, pdf *fpdf.Fpdf) error {
+	collection, err := database.GetOrders(user.ID)
 	if err != nil {
-		fmt.Printf("Could not get orders for user %d", uid)
+		fmt.Printf("Could not get orders for user %d", user.ID)
 		return err
 	}
 
@@ -41,7 +42,7 @@ func UserCollection(uid uint, name string, pdf *fpdf.Fpdf) error {
 		pdf.AddPage()
 	}
 
-	user_text := fmt.Sprintf("%s, ID: %d", name, uid)
+	user_text := fmt.Sprintf("%s, ID: %d", user.Name, user.ParticipantID)
 	pdf.CellFormat(0, 10, user_text, "", 1, "C", false, 0, "")
 
 	options := fpdf.ImageOptions{

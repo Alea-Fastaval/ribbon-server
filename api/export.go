@@ -38,7 +38,7 @@ func exportAPI(sub_path string, vars url.Values, request http.Request) (any, err
 	}
 
 	for _, user := range user_list {
-		err = render.UserCollection(user.ID, user.Name, pdf)
+		err = render.UserCollection(user, pdf)
 		if err != nil {
 			api_error(fmt.Sprintf("failed to render user collection for user %d", 1), err)
 		}
