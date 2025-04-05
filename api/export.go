@@ -42,7 +42,6 @@ func exportAPI(sub_path string, vars url.Values, request http.Request) (any, err
 		if err != nil {
 			api_error(fmt.Sprintf("failed to render user collection for user %d", 1), err)
 		}
-		pdf.SetY(pdf.GetY() + 10)
 	}
 
 	err = pdf.OutputFileAndClose(export_folder + export_file)

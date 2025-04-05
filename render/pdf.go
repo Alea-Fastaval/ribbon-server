@@ -10,7 +10,7 @@ import (
 )
 
 var ribbon_width = 25.0
-var ribbon_height = 10.0
+var ribbon_height = 8.4
 
 func UserCollection(user user.User, pdf *fpdf.Fpdf) error {
 	collection, err := database.GetOrders(user.ID)
@@ -35,10 +35,12 @@ func UserCollection(user user.User, pdf *fpdf.Fpdf) error {
 	last_count := int64(len(ribbons)) % columns
 
 	pw, ph := pdf.GetPageSize()
-	pc := pw / 2
+	_, _, _, mb := pdf.GetMargins()
+
+	pc := pw / 2.0
 	x_start := pc - ribbon_width*(float64(columns)/2.0)
 
-	if pdf.GetY()+(float64(rows)*ribbon_height)+10 > ph {
+	if pdf.GetY()+(float64(rows)*ribbon_height)+10.0 >= ph-mb {
 		pdf.AddPage()
 	}
 
@@ -75,7 +77,7 @@ func UserCollection(user user.User, pdf *fpdf.Fpdf) error {
 			row++
 		}
 
-		pdf.ImageOptions(ribbon_png, x, y, 25, 0, flow, options, 0, "")
+		pdf.ImageOptions(ribbon_png, x, y, ribbon_width, 0, flow, options, 0, "")
 		col = (col + 1) % columns
 
 		// Starting last row
@@ -85,6 +87,9 @@ func UserCollection(user user.User, pdf *fpdf.Fpdf) error {
 			}
 		}
 	}
+
+	// Add bottom margin
+	pdf.SetY(pdf.GetY() + 10)
 
 	return nil
 }
