@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"os"
 	"strconv"
 	"time"
 
@@ -13,10 +14,14 @@ import (
 )
 
 var export_file = "export.pdf"
+var public_export_folder = "public/export/"
+var public_folder_url = "/" + public_export_folder
 var export_folder string
+var public_folder string
 
 func export_config_ready() {
 	export_folder = resource_dir + "tmp/"
+	public_folder = resource_dir + public_export_folder
 }
 
 // /api/export
@@ -44,12 +49,14 @@ func exportAPI(sub_path string, vars url.Values, request http.Request) (any, err
 		api_error("failed to create PDF", err)
 	}
 
+	err = os.Rename(export_folder+export_file, public_folder+export_file)
+	if err != nil {
+		api_error("filed to move export file", err)
+	}
+
 	return map[string]string{
-		"status":       "success",
-		"content_type": "application/pdf",
-		//"file_name":    export_file,
-		"file_path": export_folder + export_file,
-		//"output": string(ribbon_png),
+		"status":        "success",
+		"download_file": public_folder_url + export_file,
 	}, nil
 
 }
