@@ -152,7 +152,7 @@ func GetAllFromYear(year int) ([]User, error) {
 	for _, row := range result {
 		list = append(list, User{
 			ID:            uint(row["id"].(int64)),
-			ParticipantID: uint(result[0]["participant_id"].(int64)),
+			ParticipantID: uint(row["participant_id"].(int64)),
 			Name:          row["name"].(string),
 			IsAdmin:       false,
 			Status:        row["status"].(string),
