@@ -58,5 +58,4 @@ func exportAPI(sub_path string, vars url.Values, request http.Request) (any, err
 		"status":        "success",
 		"download_file": public_folder_url + export_file,
 	}, nil
-
 }

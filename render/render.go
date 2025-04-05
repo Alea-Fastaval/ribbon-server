@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 	"text/template"
+	"time"
 
 	"github.com/dreamspawn/ribbon-server/config"
 	"github.com/dreamspawn/ribbon-server/database"
@@ -187,6 +188,16 @@ func RibbonFromOrder(order_id uint) (string, error) {
 func PNGFromOrder(order_id uint) (string, error) {
 	tmp_svg := temp_folder + "temp_ribbon.svg"
 	tmp_png := temp_folder + fmt.Sprintf("ribbon%d.png", order_id)
+
+	existing_file, err := os.Open(tmp_png)
+	if err == nil {
+		stats, err := existing_file.Stat()
+		if err == nil {
+			if time.Since(stats.ModTime()).Minutes() < 10 {
+				return tmp_png, nil
+			}
+		}
+	}
 
 	svg_data, err := RibbonFromOrder(order_id)
 	if err != nil {
