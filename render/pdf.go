@@ -31,6 +31,7 @@ func UserCollection(uid uint, name string, pdf *fpdf.Fpdf) error {
 	settings := collection["settings"].(map[string]any)
 	columns := settings["columns"].(int64)
 	rows := int64(math.Ceil(float64(len(ribbons)) / float64(columns)))
+	last_count := int64(len(ribbons)) % columns
 
 	pw, ph := pdf.GetPageSize()
 	pc := pw / 2
@@ -51,6 +52,7 @@ func UserCollection(uid uint, name string, pdf *fpdf.Fpdf) error {
 
 	col := int64(0)
 	row := int64(0)
+
 	for _, order := range ribbons_ordered {
 		ribbon_png, err := PNGFromOrder(uint(order["id"].(int64)))
 		if err != nil {
@@ -60,16 +62,23 @@ func UserCollection(uid uint, name string, pdf *fpdf.Fpdf) error {
 
 		y := pdf.GetY()
 		x := x_start + float64(col)*ribbon_width
+
+		// Check for last column
 		flow := false
-		if col == columns-1 {
+		last_col := columns - 1
+		if row == rows-1 && last_count != 0 {
+			last_col = last_count - 1
+		}
+		if col == last_col {
 			flow = true
 			row++
 		}
+
 		pdf.ImageOptions(ribbon_png, x, y, 25, 0, flow, options, 0, "")
 		col = (col + 1) % columns
-		// Stating last row
+
+		// Starting last row
 		if row == rows-1 && col == 0 {
-			last_count := len(ribbons) % int(columns)
 			if last_count != 0 {
 				x_start = pc - ribbon_width*(float64(last_count)/2.0)
 			}

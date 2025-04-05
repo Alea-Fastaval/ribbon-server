@@ -186,7 +186,7 @@ func RibbonFromOrder(order_id uint) (string, error) {
 }
 
 func PNGFromOrder(order_id uint) (string, error) {
-	tmp_svg := temp_folder + "temp_ribbon.svg"
+	tmp_svg := temp_folder + fmt.Sprintf("ribbon%d.svg", order_id)
 	tmp_png := temp_folder + fmt.Sprintf("ribbon%d.png", order_id)
 
 	existing_file, err := os.Open(tmp_png)
