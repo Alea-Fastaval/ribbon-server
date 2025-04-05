@@ -26,9 +26,10 @@ func export_config_ready() {
 
 // /api/export
 func exportAPI(sub_path string, vars url.Values, request http.Request) (any, error) {
-	pdf := fpdf.New("P", "mm", "A4", "")
+	pdf := fpdf.New("P", "mm", "A4", resource_dir+"font/")
+	pdf.AddUTF8Font("Montserrat", "", "montserrat_regular.ttf")
+	pdf.SetFont("Montserrat", "", 12)
 	pdf.AddPage()
-	pdf.SetFont("Arial", "", 12)
 
 	this_year, _ := strconv.ParseInt(time.Now().Format("2006"), 0, 0)
 	user_list, err := user.GetAllFromYear(int(this_year))

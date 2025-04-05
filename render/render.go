@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"os/exec"
 	"strconv"
@@ -195,8 +196,14 @@ func PNGFromOrder(order_id uint) (string, error) {
 		if err == nil {
 			if time.Since(stats.ModTime()).Minutes() < 10 {
 				return tmp_png, nil
+			} else {
+				log.Output(1, fmt.Sprintf("Mod time of file %s was %f minutes ago\n", tmp_png, time.Since(stats.ModTime()).Minutes()))
 			}
+		} else {
+			log.Output(1, fmt.Sprintf("Error getting stats for file %s\n%v\n", tmp_png, err))
 		}
+	} else {
+		log.Output(1, fmt.Sprintf("Error opening file %s\n%v\n", tmp_png, err))
 	}
 
 	svg_data, err := RibbonFromOrder(order_id)
