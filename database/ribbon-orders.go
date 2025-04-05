@@ -94,6 +94,49 @@ func update(uid, ribbon uint, values map[string]uint, old_position int64) error 
 	return err
 }
 
+func GetOrderByID(order_id uint) (map[string]any, error) {
+	var settings map[string]any
+
+	query := "SELECT * FROM ribbon_orders WHERE id = ?"
+
+	result, err := Query(query, []any{order_id})
+	if err != nil {
+		return nil, err
+	}
+	if len(result) == 0 {
+		log.Output(1, fmt.Sprintf("Error: Unknown order id %d", order_id))
+		return nil, fmt.Errorf("no order with id %d", order_id)
+	}
+
+	uid, ok := result[0]["user_id"].(int64)
+	if !ok {
+		log.Output(1, fmt.Sprintf("Error getting user_id from order %d", order_id))
+		return map[string]any{
+			"order":    result[0],
+			"settings": settings,
+		}, nil
+	}
+
+	query = "SELECT * FROM users WHERE id = ?"
+	user_result, err := Query(query, []any{uid})
+	if err != nil {
+		return nil, err
+	}
+
+	if len(user_result) != 0 {
+		settings = make(map[string]any)
+		settings["status"] = user_result[0]["status"]
+		settings["columns"] = user_result[0]["columns"]
+	} else {
+		log.Output(1, fmt.Sprintf("Error loading order settings for user %d", uid))
+	}
+
+	return map[string]any{
+		"order":    result[0],
+		"settings": settings,
+	}, nil
+}
+
 func GetOrders(uid uint) (map[string]any, error) {
 	query := "SELECT * FROM ribbon_orders WHERE user_id = ?"
 	result, err := Query(query, []any{uid})

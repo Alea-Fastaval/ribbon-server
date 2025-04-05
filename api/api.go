@@ -26,6 +26,7 @@ var hmac_key []byte
 func ConfigReady() {
 	resource_dir = config.Get("resource_dir")
 	set_hmac_key(resource_dir + "keys/hmac.key")
+	export_config_ready()
 }
 
 var endpoints = map[string]func(string, url.Values, http.Request) (any, error){
@@ -34,6 +35,7 @@ var endpoints = map[string]func(string, url.Values, http.Request) (any, error){
 	"glyphs":       glyphsAPI,
 	"ribbons":      ribbonsAPI,
 	"orders":       ordersAPI,
+	"export":       exportAPI,
 }
 
 func Handle(endpoint string, vars url.Values, request http.Request, writer http.ResponseWriter) {
@@ -191,6 +193,13 @@ func Handle(endpoint string, vars url.Values, request http.Request, writer http.
 		if output, ok := data_map["output"]; ok {
 			io.WriteString(writer, output)
 			return
+		}
+
+		if file_path, ok := data_map["file_path"]; ok {
+			if filename, ok := data_map["file_name"]; ok {
+				writer.Header().Set("Content-Disposition", "attachment; filename="+filename)
+			}
+			http.ServeFile(writer, &request, file_path)
 		}
 	}
 

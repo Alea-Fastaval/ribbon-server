@@ -18,10 +18,11 @@ type User struct {
 	ID      uint
 	IsAdmin bool
 	Name    string
+	Status  string
 }
 
 var admin = User{
-	0, true, "Admin",
+	0, true, "Admin", "",
 }
 
 func (user *User) GetName() string {
@@ -131,6 +132,31 @@ func queryLoadFromDB(query string, args []any) (*User, error) {
 		Name:    result[0]["name"].(string),
 		IsAdmin: false,
 	}, nil
+}
+
+func GetAllFromYear(year int) ([]User, error) {
+	query := "SELECT * FROM users WHERE year = ?"
+
+	result, err := database.Query(query, []any{year})
+	if err != nil {
+		return nil, err
+	}
+
+	if len(result) == 0 {
+		return nil, ErrNoUserFound
+	}
+
+	var list []User
+	for _, row := range result {
+		list = append(list, User{
+			ID:      uint(row["id"].(int64)),
+			Name:    row["name"].(string),
+			IsAdmin: false,
+			Status:  row["status"].(string),
+		})
+	}
+
+	return list, nil
 }
 
 func createInDB(pid, year, name, email string) *User {
