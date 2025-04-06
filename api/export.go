@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"codeberg.org/go-pdf/fpdf"
@@ -26,6 +27,27 @@ func export_config_ready() {
 
 // /api/export
 func exportAPI(sub_path string, vars url.Values, request http.Request) (any, error) {
+	//--------------------------------------------------------------------------------------------------------------------
+	// Get time of last export
+	//--------------------------------------------------------------------------------------------------------------------
+	if strings.HasPrefix(sub_path, "time") {
+		file, err := os.Open(public_folder + export_file)
+		if err != nil {
+			api_error("could not open export file", err)
+		}
+		stats, err := file.Stat()
+		if err != nil {
+			api_error("could not stat export file", err)
+		}
+		return map[string]any{
+			"status":           "success",
+			"file_age_minutes": time.Since(stats.ModTime()).Minutes(),
+		}, nil
+	}
+
+	//--------------------------------------------------------------------------------------------------------------------
+	// Create new export
+	//--------------------------------------------------------------------------------------------------------------------
 	pdf := fpdf.New("P", "mm", "A4", resource_dir+"font/")
 	pdf.AddUTF8Font("Montserrat", "", "montserrat_regular.ttf")
 	pdf.SetFont("Montserrat", "", 12)
