@@ -55,6 +55,7 @@ func main() {
 	fmt.Printf("Resouce directory: %s\n", config.Get("resource_dir"))
 
 	database.Connect()
+	database.Update()
 
 	var ribbon_server = server.Server{}
 	ribbon_server.Start(config.Get("socket_path"))

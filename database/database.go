@@ -1,8 +1,15 @@
 package database
 
 import (
+	"bufio"
 	"database/sql"
 	"fmt"
+	"maps"
+	"os"
+	"path/filepath"
+	"regexp"
+	"slices"
+	"strconv"
 	"strings"
 
 	"github.com/dreamspawn/ribbon-server/config"
@@ -33,6 +40,153 @@ func Connect() {
 	}
 
 	db = handle
+}
+
+func Update() {
+	fmt.Println("Checking for database updates")
+
+	// Get DB version
+	var db_version float64
+	var db_version_string string
+	statement := "SELECT value FROM options WHERE name='db_version'"
+	row := db.QueryRow(statement)
+	err := row.Scan(&db_version_string)
+	if err != nil {
+		switch err {
+		case sql.ErrNoRows:
+			db_version = 0
+			query := "INSERT INTO options (name, value) VALUES('db_version', 0)"
+			_, err = Exec(query, []any{})
+			if err != nil {
+				fmt.Print("Could not insert version into database\n")
+				panic(err)
+			}
+		default:
+			fmt.Println("Could not get version from DB")
+			panic(db_error(statement, nil, err))
+		}
+	} else {
+		db_version, err = strconv.ParseFloat(db_version_string, 64)
+		if err != nil {
+			fmt.Println("Could not parse version number from DB")
+			panic(err)
+		}
+	}
+
+	fmt.Printf("Current DB version: %.2f\n", db_version)
+
+	// Get update folders
+	var update_folders = make(map[float64]os.DirEntry, 0)
+	updates_dir := config.Get("resource_dir") + "database/updates/"
+	files, err := os.ReadDir(updates_dir)
+	if err != nil {
+		fmt.Printf("Could not read content of folder %s\n", updates_dir)
+		panic(err)
+	}
+
+	// Check for new updates
+	for _, file := range files {
+		if !file.IsDir() {
+			continue
+		}
+
+		folder_version, err := strconv.ParseFloat(file.Name(), 64)
+
+		if err != nil || folder_version <= db_version {
+			continue
+		}
+
+		update_folders[folder_version] = file
+	}
+
+	if len(update_folders) == 0 {
+		fmt.Print("No new database updates found\n")
+		return
+	}
+
+	// Run updates in order of folder version
+	for _, key := range slices.Sorted(maps.Keys(update_folders)) {
+		folder := updates_dir + update_folders[key].Name()
+		script_files, err := os.ReadDir(folder)
+		if err != nil {
+			fmt.Printf("Could not read content of folder %s\n", folder)
+			panic(err)
+		}
+
+		for _, script_file := range script_files {
+			if script_file.IsDir() || filepath.Ext(script_file.Name()) != ".sql" {
+				fmt.Printf("skipping file with extension: %s\n", filepath.Ext(script_file.Name()))
+				continue
+			}
+
+			script, err := LoadScript(folder + "/" + script_file.Name())
+			if err != nil {
+				fmt.Printf("could not read script file %s\n", script_file.Name())
+				panic(err)
+			}
+			fmt.Printf("Running update script %s\n", script_file.Name())
+			fmt.Printf("Script content: %s\n", script)
+			err = RunScript(script)
+			if err != nil {
+				fmt.Printf("Error running update script %s\n", script_file.Name())
+				panic(err)
+			}
+		}
+
+		query := "UPDATE options SET value=? WHERE name='db_version'"
+		_, err = Exec(query, []any{key})
+		if err != nil {
+			fmt.Printf("Could not update version in database %s\n", key)
+			panic(err)
+		}
+		fmt.Printf("Database updated to version %.2f\n", key)
+	}
+}
+
+func LoadScript(path string) (string, error) {
+	// open translation file
+	file, err := os.Open(path)
+	if err != nil {
+		return "", err
+	}
+
+	var script string
+	reader := bufio.NewReader(file)
+	for {
+		bytes, _, err := reader.ReadLine()
+		if err != nil {
+			if err.Error() == "EOF" {
+				break
+			}
+			return "", err
+		}
+
+		line := string(bytes)
+
+		// Allow comments
+		if line == "" || strings.HasPrefix(line, "--") {
+			continue
+		}
+
+		script += line + "\n"
+	}
+
+	return script, nil
+}
+
+func RunScript(script string) error {
+	queries := strings.Split(script, ";")
+	for _, query := range queries {
+		if match, _ := regexp.MatchString("\n?\\s*", query); match {
+			continue
+		}
+		_, err := Exec(query, []any{})
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func Query(statement string, args []any) ([]map[string]interface{}, error) {
