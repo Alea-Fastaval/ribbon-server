@@ -44,7 +44,7 @@ func UserCollection(user user.User, pdf *fpdf.Fpdf) error {
 		pdf.AddPage()
 	}
 
-	user_text := fmt.Sprintf("%s, ID: %d", user.Name, user.ParticipantID)
+	user_text := fmt.Sprintf("%s, ID: %d", user.GetName(), user.ParticipantID)
 	pdf.CellFormat(0, 10, user_text, "", 1, "C", false, 0, "")
 
 	options := fpdf.ImageOptions{

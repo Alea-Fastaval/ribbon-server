@@ -18,19 +18,23 @@ type User struct {
 	ID            uint
 	ParticipantID uint
 	IsAdmin       bool
-	Name          string
+	LegalName     string
+	DisplayName   string
 	Status        string
 }
 
 var admin = User{
-	0, 0, true, "Admin", "",
+	0, 0, true, "Admin", "", "",
 }
 
 func (user *User) GetName() string {
 	if user == nil {
 		return "<anonymous>"
 	}
-	return user.Name
+	if user.DisplayName != "" {
+		return user.DisplayName
+	}
+	return user.LegalName
 }
 
 func (user *User) CheckAccess(base, sub, method string) bool {
@@ -101,6 +105,7 @@ func TryLogin(vars url.Values) *User {
 			participant_id,
 			this_year,
 			result["name"],
+			result["display_name"],
 			result["email"],
 		)
 	}
@@ -131,7 +136,8 @@ func queryLoadFromDB(query string, args []any) (*User, error) {
 	return &User{
 		ID:            uint(result[0]["id"].(int64)),
 		ParticipantID: uint(result[0]["participant_id"].(int64)),
-		Name:          result[0]["name"].(string),
+		LegalName:     result[0]["name"].(string),
+		DisplayName:   result[0]["display_name"].(string),
 		IsAdmin:       false,
 	}, nil
 }
@@ -153,7 +159,8 @@ func GetAllFromYear(year int) ([]User, error) {
 		list = append(list, User{
 			ID:            uint(row["id"].(int64)),
 			ParticipantID: uint(row["participant_id"].(int64)),
-			Name:          row["name"].(string),
+			LegalName:     row["name"].(string),
+			DisplayName:   row["display_name"].(string),
 			IsAdmin:       false,
 			Status:        row["status"].(string),
 		})
@@ -162,9 +169,9 @@ func GetAllFromYear(year int) ([]User, error) {
 	return list, nil
 }
 
-func createInDB(pid, year, name, email string) *User {
-	query := "INSERT INTO users (participant_id, year, name, email, status) VALUES(?,?,?,?,'open')"
-	result, err := database.Exec(query, []any{pid, year, name, email})
+func createInDB(pid, year, name, display_name, email string) *User {
+	query := "INSERT INTO users (participant_id, year, name, display_name, email, status) VALUES(?,?,?,?,?,'clean')"
+	result, err := database.Exec(query, []any{pid, year, name, display_name, email})
 	if err != nil {
 		log.Output(2, fmt.Sprintf("Error creating new DB user: %+v\n", err))
 		return nil
@@ -173,8 +180,10 @@ func createInDB(pid, year, name, email string) *User {
 	id, _ := result.LastInsertId()
 
 	return &User{
-		ID:      uint(id),
-		Name:    name,
-		IsAdmin: false,
+		ID:          uint(id),
+		LegalName:   name,
+		DisplayName: display_name,
+		IsAdmin:     false,
+		Status:      "clean",
 	}
 }

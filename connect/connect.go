@@ -35,6 +35,7 @@ func GetUser(id string, pass string) map[string]string {
 
 	fields := []string{
 		"name",
+		"display_name",
 		"email",
 	}
 

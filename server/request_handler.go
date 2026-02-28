@@ -180,7 +180,7 @@ func (handler RequestHandler) ServeHTTP(writer http.ResponseWriter, request *htt
 
 	user_header_tmpl := render.LoadTemplate("user-header.tmpl")
 	user_header := render.TemplateString(user_header_tmpl, map[string]string{
-		"name":   session_user.Name,
+		"name":   session_user.GetName(),
 		"action": request.URL.Path,
 		"logout": translations.Get(page.Lang, "general", "logout"),
 		"link":   link,
