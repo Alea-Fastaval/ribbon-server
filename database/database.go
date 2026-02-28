@@ -125,7 +125,6 @@ func Update() {
 				panic(err)
 			}
 			fmt.Printf("Running update script %s\n", script_file.Name())
-			fmt.Printf("Script content: %s\n", script)
 			err = RunScript(script)
 			if err != nil {
 				fmt.Printf("Error running update script %s\n", script_file.Name())
@@ -136,7 +135,7 @@ func Update() {
 		query := "UPDATE options SET value=? WHERE name='db_version'"
 		_, err = Exec(query, []any{key})
 		if err != nil {
-			fmt.Printf("Could not update version in database %s\n", key)
+			fmt.Printf("Could not update version in database %.2f\n", key)
 			panic(err)
 		}
 		fmt.Printf("Database updated to version %.2f\n", key)
@@ -177,7 +176,7 @@ func LoadScript(path string) (string, error) {
 func RunScript(script string) error {
 	queries := strings.Split(script, ";")
 	for _, query := range queries {
-		if match, _ := regexp.MatchString("\n?\\s*", query); match {
+		if match, _ := regexp.MatchString("^\n?\\s*$", query); match {
 			continue
 		}
 		_, err := Exec(query, []any{})
