@@ -46,6 +46,7 @@ func ordersAPI(sub_path string, vars url.Values, request http.Request) (any, err
 			api_error("Admin cannot order ribbons (yet)", nil)
 		}
 
+		// Set columns
 		if sub_path == "columns" {
 			if columns_string, ok := vars["value"]; ok {
 				columns, _ := strconv.ParseUint(columns_string[0], 10, 32)
@@ -62,6 +63,7 @@ func ordersAPI(sub_path string, vars url.Values, request http.Request) (any, err
 			}
 		}
 
+		// Set status
 		if sub_path == "status" {
 			if status := vars.Get("value"); status != "" {
 				err := database.SetStatus(user.ID, status)
@@ -77,6 +79,27 @@ func ordersAPI(sub_path string, vars url.Values, request http.Request) (any, err
 			}
 		}
 
+		// Copy from other user
+		if sub_path == "copy" {
+			if user_id_string := vars.Get("user_id"); user_id_string != "" {
+				user_id, err := strconv.ParseUint(user_id_string, 10, 64)
+				if err != nil {
+					api_error(fmt.Sprintf("Could not parse user_id: %s", user_id_string), err)
+				}
+				err = database.CopyOrder(uint(user_id), user.ID)
+				if err != nil {
+					api_error(fmt.Sprintf("error copying order from user: %d to user: %d", user_id, user.ID), err)
+				}
+				return map[string]string{
+					"status":  "success",
+					"message": "status set",
+				}, nil
+			} else {
+				api_error("missing parameter: user_id", nil)
+			}
+		}
+
+		// Add Ribbon order
 		var ribbon_id uint64
 		if ribbon, ok := vars["ribbon"]; ok {
 			ribbon_id, _ = strconv.ParseUint(ribbon[0], 10, 32)
@@ -129,6 +152,23 @@ func ordersAPI(sub_path string, vars url.Values, request http.Request) (any, err
 			api_error("Admin cannot delete ribbons (yet)", nil)
 		}
 
+		// Complete reset
+		if sub_path == "" {
+			err := database.ResetOrder(
+				uint(user.ID),
+			)
+
+			if err != nil {
+				api_error(fmt.Sprintf("Failed to delete ribbon order with values %+v\n", vars), err)
+			}
+
+			return map[string]string{
+				"status":  "success",
+				"message": "ribbon order reset",
+			}, nil
+		}
+
+		//Delete single ribbon
 		//fmt.Printf("Delete order path:%s", sub_path)
 		ribbon_id, err := strconv.ParseUint(sub_path, 10, 32)
 		if err != nil {

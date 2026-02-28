@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 )
 
 func SetOrder(uid, ribbon uint, values map[string]uint) error {
@@ -163,6 +164,20 @@ func GetOrders(uid uint) (map[string]any, error) {
 		log.Output(1, fmt.Sprintf("Error loading order settings for user %d", uid))
 	}
 
+	if result[0]["status"] == "clean" {
+		mail := result[0]["email"]
+		year := time.Now().Format("2006")
+		query = "SELECT id, year FROM users WHERE email = ? AND year <> ? ORDER BY year DESC"
+		result, err := Query(query, []any{mail, year})
+		if err != nil {
+			return nil, err
+		}
+		if len(result) != 0 {
+			settings["latest_year"] = result[0]["year"]
+			settings["latest_user"] = result[0]["id"]
+		}
+	}
+
 	return map[string]any{
 		"list":     orders,
 		"settings": settings,
@@ -253,6 +268,42 @@ func DeleteOrder(uid, ribbon uint) error {
 	// Update positions of other orders
 	query = "UPDATE ribbon_orders SET position = position -1 WHERE user_id = ? AND position > ?"
 	_, err = Exec(query, []any{uid, order[0]["position"]})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func ResetOrder(uid uint) error {
+	// Delete all orders
+	query := "DELETE FROM ribbon_orders WHERE user_id = ?"
+	_, err := Exec(query, []any{uid})
+	if err != nil {
+		return err
+	}
+
+	// Update status
+	query = "UPDATE users SET status='clean' WHERE id = ?"
+	_, err = Exec(query, []any{uid})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func CopyOrder(from, to uint) error {
+	// Copy ribbons
+	query := "INSERT INTO ribbon_orders (user_id, ribbon_id, grunt, second, leader, position) SELECT ?, ribbon_id, grunt, second, leader, position FROM ribbon_orders WHERE user_id = ?"
+	_, err := Exec(query, []any{to, from})
+	if err != nil {
+		return err
+	}
+
+	// Copy columns and set status
+	query = "UPDATE users AS dest, ( SELECT * FROM users WHERE id = ? ) AS src SET dest.columns = src.columns, dest.status = 'open' WHERE dest.id = ?"
+	_, err = Exec(query, []any{from, to})
 	if err != nil {
 		return err
 	}
