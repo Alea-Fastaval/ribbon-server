@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/dreamspawn/ribbon-server/config"
@@ -79,6 +80,7 @@ func load(file_name string, lang string) error {
 			continue
 		}
 
+		line, err = strconv.Unquote("\"" + line + "\"")
 		key, translation, _ := strings.Cut(line, " ")
 		translation_set[key] = translation
 	}
