@@ -33,15 +33,17 @@ type RequestHandler struct {
 func (handler RequestHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	var vars url.Values
 	switch request.Method {
-	case "GET":
-		vars = request.URL.Query()
 	case "POST":
+		fallthrough
+	case "PATCH":
 		err := request.ParseForm()
 		if err != nil {
 			fmt.Print("Could not parse form data\n")
 			panic(err)
 		}
 		vars = request.Form
+	case "GET":
+		vars = request.URL.Query()
 	}
 
 	// Handle API calls

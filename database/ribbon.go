@@ -22,6 +22,7 @@ type Ribbon struct {
 // Create
 // ----------------------------------------------------------------------------------------------------------------------
 func CreateRibbon(category uint, glyph uint, no_wings bool) (*Ribbon, error) {
+	// Get number of existing ribbons, for insert position
 	var ribbon_count uint
 	statement := "SELECT COUNT(*) FROM ribbons WHERE category_id = ?"
 	row := db.QueryRow(statement, category)
@@ -33,6 +34,7 @@ func CreateRibbon(category uint, glyph uint, no_wings bool) (*Ribbon, error) {
 		return nil, db_error(statement, args, err)
 	}
 
+	// Create ribbon
 	statement = "INSERT INTO ribbons(category_id, glyph_id, no_wings, ordering) VALUES(?,?,?,?)"
 	result, err := db.Exec(statement, category, glyph, no_wings, ribbon_count)
 	if err != nil {
@@ -45,6 +47,7 @@ func CreateRibbon(category uint, glyph uint, no_wings bool) (*Ribbon, error) {
 		return nil, db_error(statement, args, err)
 	}
 
+	// Get ID for result
 	id, err := result.LastInsertId()
 	new_ribbon := Ribbon{
 		uint(id),
@@ -159,6 +162,36 @@ func getSpecial(ribbon_id uint) map[string]string {
 	}
 
 	return special
+}
+
+// ----------------------------------------------------------------------------------------------------------------------
+// UPDATE
+// ----------------------------------------------------------------------------------------------------------------------
+func UpdateRibbon(ribbon_id, category, glyph uint, no_wings bool) (*Ribbon, error) {
+	statement := "UPDATE ribbons SET category_id=?, glyph_id=?, no_wings=? WHERE id = ?"
+	_, err := db.Exec(statement, category, glyph, no_wings, ribbon_id)
+	if err != nil {
+		args := []any{
+			category,
+			glyph,
+			no_wings,
+			ribbon_id,
+		}
+		return nil, db_error(statement, args, err)
+	}
+
+	new_ribbon := Ribbon{
+		ribbon_id,
+		category,
+		glyph,
+		no_wings,
+		0,
+		false,
+		false,
+		nil,
+	}
+
+	return &new_ribbon, err
 }
 
 // ----------------------------------------------------------------------------------------------------------------------

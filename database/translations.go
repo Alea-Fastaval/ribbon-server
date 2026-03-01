@@ -9,6 +9,13 @@ func AddTranslation(lang string, label string, value string) error {
 	return err
 }
 
+func UpdateTranslation(lang string, label string, value string) error {
+	statement := "UPDATE translations SET string = ? WHERE lang = ? AND label = ?"
+	_, err := db.Exec(statement, value, lang, label)
+
+	return err
+}
+
 func DeleteTranslation(lang, label string) error {
 	statement := "DELETE FROM translations WHERE lang = ? AND label = ?"
 	_, err := db.Exec(statement, lang, label)
