@@ -13,6 +13,8 @@ type Ribbon struct {
 	Glyph    uint
 	NoWings  bool
 	Ordering uint
+	Retired  bool
+	Hidden   bool
 	Special  map[string]string
 }
 
@@ -50,6 +52,8 @@ func CreateRibbon(category uint, glyph uint, no_wings bool) (*Ribbon, error) {
 		glyph,
 		no_wings,
 		ribbon_count,
+		false,
+		false,
 		nil,
 	}
 
@@ -59,8 +63,14 @@ func CreateRibbon(category uint, glyph uint, no_wings bool) (*Ribbon, error) {
 // ----------------------------------------------------------------------------------------------------------------------
 // Read
 // ----------------------------------------------------------------------------------------------------------------------
-func GetRibbons() ([]Ribbon, error) {
-	statement := "SELECT * FROM ribbons ORDER BY ordering"
+func GetRibbons(include_hidden bool) ([]Ribbon, error) {
+	statement := ""
+	if include_hidden {
+		statement = "SELECT * FROM ribbons ORDER BY ordering"
+	} else {
+		statement = "SELECT * FROM ribbons WHERE hidden = false ORDER BY ordering"
+	}
+
 	rows, err := db.Query(statement)
 	if err != nil {
 		return nil, err
@@ -77,6 +87,8 @@ func GetRibbons() ([]Ribbon, error) {
 			&ribbon.Glyph,
 			&ribbon.NoWings,
 			&ribbon.Ordering,
+			&ribbon.Retired,
+			&ribbon.Hidden,
 		)
 
 		ribbon.Special = getSpecial(ribbon.ID)
@@ -102,6 +114,8 @@ func GetRibbon(id uint) (*Ribbon, error) {
 		&ribbon.Glyph,
 		&ribbon.NoWings,
 		&ribbon.Ordering,
+		&ribbon.Retired,
+		&ribbon.Hidden,
 	)
 
 	ribbon.Special = getSpecial(id)
@@ -145,6 +159,24 @@ func getSpecial(ribbon_id uint) map[string]string {
 	}
 
 	return special
+}
+
+// ----------------------------------------------------------------------------------------------------------------------
+// Undelete ribbon from view
+// ----------------------------------------------------------------------------------------------------------------------
+func ShowRibbon(id uint) error {
+	query := "UPDATE ribbons SET hidden = false WHERE id = ?"
+	_, err := Exec(query, []any{id})
+	return err
+}
+
+// ----------------------------------------------------------------------------------------------------------------------
+// Delete (from view)
+// ----------------------------------------------------------------------------------------------------------------------
+func HideRibbon(id uint) error {
+	query := "UPDATE ribbons SET hidden = true WHERE id = ?"
+	_, err := Exec(query, []any{id})
+	return err
 }
 
 // ----------------------------------------------------------------------------------------------------------------------

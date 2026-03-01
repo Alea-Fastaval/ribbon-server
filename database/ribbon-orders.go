@@ -139,7 +139,7 @@ func GetOrderByID(order_id uint) (map[string]any, error) {
 }
 
 func GetOrders(uid uint) (map[string]any, error) {
-	query := "SELECT * FROM ribbon_orders WHERE user_id = ?"
+	query := "SELECT * FROM ribbon_orders ro JOIN ribbons r ON ro.ribbon_id = r.id WHERE user_id = ? AND r.hidden = false"
 	result, err := Query(query, []any{uid})
 	if err != nil {
 		return nil, err
@@ -185,7 +185,7 @@ func GetOrders(uid uint) (map[string]any, error) {
 }
 
 func GetAllOrders() (map[string]any, error) {
-	query := "SELECT * FROM ribbon_orders r JOIN users u ON r.user_id = u.id"
+	query := "SELECT * FROM ribbon_orders ro JOIN users u ON ro.user_id = u.id JOIN ribbons r ON ro.ribbon_id = r.id WHERE r.hidden = false"
 	orders, err := Query(query, []any{})
 	if err != nil {
 		return nil, err

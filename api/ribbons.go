@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/dreamspawn/ribbon-server/database"
-	"github.com/dreamspawn/ribbon-server/translations"
+	"github.com/dreamspawn/ribbon-server/server/session"
 )
 
 // /api/ribbons
@@ -18,11 +18,14 @@ func ribbonsAPI(sub_path string, vars url.Values, request http.Request) (any, er
 		return svgAPI(sub_adress, vars, request)
 	}
 
+	current_session := session.Check(request)
+	user := current_session.GetUser()
+
 	//--------------------------------------------------------------------------------------------------------------------
 	// GET
 	//--------------------------------------------------------------------------------------------------------------------
 	if request.Method == "GET" {
-		ribbons, err := database.GetRibbons()
+		ribbons, err := database.GetRibbons(user.IsAdmin)
 		if err != nil {
 			api_error("could not load ribbons from database", nil)
 		}
@@ -39,6 +42,24 @@ func ribbonsAPI(sub_path string, vars url.Values, request http.Request) (any, er
 	// POST
 	//--------------------------------------------------------------------------------------------------------------------
 	if request.Method == "POST" {
+		//Show ribbon again
+		if sub_path[0:5] == "show/" {
+			ribbon_id, err := strconv.ParseUint(sub_path[5:], 10, 32)
+			if err != nil {
+				api_error(fmt.Sprintf("Could not parse %s as a ribbon ID\n", sub_path[5:]), err)
+			}
+
+			err = database.ShowRibbon(uint(ribbon_id))
+			if err != nil {
+				api_error(fmt.Sprintf("error trying to show ribbon with ID: %d\n", ribbon_id), err)
+			}
+
+			return map[string]string{
+				"status":  "success",
+				"message": fmt.Sprintf("ribbon %d is now shown again", ribbon_id),
+			}, nil
+		}
+
 		true_string := map[string]bool{
 			"t":    true,
 			"true": true,
@@ -98,38 +119,14 @@ func ribbonsAPI(sub_path string, vars url.Values, request http.Request) (any, er
 			api_error("missing ribbon id in url", err)
 		}
 
-		err = database.DeleteRibbon(uint(ribbon_id))
+		err = database.HideRibbon(uint(ribbon_id))
 		if err != nil {
-			api_error(fmt.Sprintf("error trying to delete ribbon with ID: %d\n", ribbon_id), err)
-		}
-
-		trans_errors := make(map[string]error)
-		for _, lang := range translations.GetLanguages() {
-			err = database.DeleteTranslation(lang, fmt.Sprintf("ribbons.%d.name", ribbon_id))
-			if err != nil {
-				key := fmt.Sprintf("name %s", lang)
-				trans_errors[key] = err
-			}
-			err = database.DeleteTranslation(lang, fmt.Sprintf("ribbons.%d.desc", ribbon_id))
-			if err != nil {
-				key := fmt.Sprintf("desc %s", lang)
-				trans_errors[key] = err
-			}
-		}
-
-		if len(trans_errors) != 0 {
-			var err error
-			message := "there was an error deleting translations for the following entries:"
-			for key, e := range trans_errors {
-				message += fmt.Sprintf("<%s>", key)
-				err = e
-			}
-			api_error(message, err)
+			api_error(fmt.Sprintf("error trying to hide ribbon with ID: %d\n", ribbon_id), err)
 		}
 
 		return map[string]string{
 			"status":  "success",
-			"message": fmt.Sprintf("ribbon %d deleted", ribbon_id),
+			"message": fmt.Sprintf("ribbon %d is now hidden", ribbon_id),
 		}, nil
 	}
 
