@@ -203,16 +203,16 @@ func UpdateRibbon(ribbon_id, category, glyph uint, no_wings bool) (*Ribbon, erro
 		return &new_ribbon, err
 	}
 
-	// Set position to last in new category
-	statement = "UPDATE ribbons as r, (SELECT COUNT(*) as total FROM ribbons WHERE category_id = ?) as new SET r.ordering = new.total WHERE id = ?"
-	_, err = db.Exec(statement, category, ribbon_id)
+	// Move all ribbons with later position from old category up one place
+	statement = "UPDATE ribbons as r, (SELECT ordering FROM ribbons WHERE id = ?) as old SET r.ordering = r.ordering - 1 WHERE r.ordering > old.ordering AND category_id = ?"
+	_, err = db.Exec(statement, ribbon_id, category)
 	if err != nil {
 		return nil, db_error(statement, []any{category, ribbon_id}, err)
 	}
 
-	// Move all ribbons with later position from old category up one place
-	statement = "UPDATE ribbons as r, (SELECT ordering FROM ribbons WHERE id = ?) as old SET r.ordering = r.ordering - 1 WHERE r.ordering > old.ordering AND category_id = ?"
-	_, err = db.Exec(statement, ribbon_id, category)
+	// Set position to last in new category
+	statement = "UPDATE ribbons as r, (SELECT COUNT(*) as total FROM ribbons WHERE category_id = ?) as new SET r.ordering = new.total - 1 WHERE id = ?"
+	_, err = db.Exec(statement, category, ribbon_id)
 	if err != nil {
 		return nil, db_error(statement, []any{category, ribbon_id}, err)
 	}
