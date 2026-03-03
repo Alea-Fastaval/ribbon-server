@@ -155,6 +155,25 @@ func ribbonsAPI(sub_path string, vars url.Values, request http.Request) (any, er
 			api_error("missing parameter: id", nil)
 		}
 
+		if sub_section == "retire" {
+			var retired bool
+			if value, ok := vars["value"]; ok {
+				retired, _ = strconv.ParseBool(value[0])
+			} else {
+				api_error("missing parameter: value", nil)
+			}
+
+			err := database.RetireRibbon(uint(ribbon_id), retired)
+			if err != nil {
+				api_error(fmt.Sprintf("error trying to retire/unretire ribbon with ID: %d\n", ribbon_id), err)
+			}
+
+			return map[string]string{
+				"status":  "success",
+				"message": fmt.Sprintf("ribbon %d retired status is now %t", ribbon_id, retired),
+			}, nil
+		}
+
 		var cat_id uint64
 		if cat, ok := vars["category"]; ok {
 			cat_id, _ = strconv.ParseUint(cat[0], 10, 32)

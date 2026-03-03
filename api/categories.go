@@ -30,6 +30,8 @@ func categoriesAPI(sub_path string, vars url.Values, request http.Request) (any,
 			vars["glyph_color"][0],
 			vars["wing1_color"][0],
 			vars["wing2_color"][0],
+			vars["retired_side"][0],
+			vars["retired_color"][0],
 		)
 
 		if err != nil {

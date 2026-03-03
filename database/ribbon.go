@@ -168,8 +168,16 @@ func getSpecial(ribbon_id uint) map[string]string {
 // UPDATE
 // ----------------------------------------------------------------------------------------------------------------------
 func UpdateRibbon(ribbon_id, category, glyph uint, no_wings bool) (*Ribbon, error) {
-	statement := "UPDATE ribbons SET category_id=?, glyph_id=?, no_wings=? WHERE id = ?"
-	_, err := db.Exec(statement, category, glyph, no_wings, ribbon_id)
+	var old_category uint
+	statement := "SELECT category_id FROM ribbons WHERE id = ?"
+	row := db.QueryRow(statement, ribbon_id)
+	err := row.Scan(&old_category)
+	if err != nil {
+		return nil, db_error(statement, nil, err)
+	}
+
+	statement = "UPDATE ribbons SET category_id=?, glyph_id=?, no_wings=? WHERE id = ?"
+	_, err = db.Exec(statement, category, glyph, no_wings, ribbon_id)
 	if err != nil {
 		args := []any{
 			category,
@@ -191,7 +199,34 @@ func UpdateRibbon(ribbon_id, category, glyph uint, no_wings bool) (*Ribbon, erro
 		nil,
 	}
 
+	if old_category == category {
+		return &new_ribbon, err
+	}
+
+	// Set position to last in new category
+	statement = "UPDATE ribbons as r, (SELECT COUNT(*) as total FROM ribbons WHERE category_id = ?) as new SET r.ordering = new.total WHERE id = ?"
+	_, err = db.Exec(statement, category, ribbon_id)
+	if err != nil {
+		return nil, db_error(statement, []any{category, ribbon_id}, err)
+	}
+
+	// Move all ribbons with later position from old category up one place
+	statement = "UPDATE ribbons as r, (SELECT ordering FROM ribbons WHERE id = ?) as old SET r.ordering = r.ordering - 1 WHERE r.ordering > old.ordering AND category_id = ?"
+	_, err = db.Exec(statement, ribbon_id, category)
+	if err != nil {
+		return nil, db_error(statement, []any{category, ribbon_id}, err)
+	}
+
 	return &new_ribbon, err
+}
+
+// ----------------------------------------------------------------------------------------------------------------------
+// retire/unretire ribbon
+// ----------------------------------------------------------------------------------------------------------------------
+func RetireRibbon(id uint, retired bool) error {
+	query := "UPDATE ribbons SET retired = ? WHERE id = ?"
+	_, err := Exec(query, []any{retired, id})
+	return err
 }
 
 // ----------------------------------------------------------------------------------------------------------------------

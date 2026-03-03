@@ -6,13 +6,15 @@ import (
 )
 
 type Category struct {
-	ID         uint
-	Background string
-	Stripes    string
-	Glyph      string
-	Wing1      string
-	Wing2      string
-	Ordering   uint
+	ID           uint
+	Background   string
+	Stripes      string
+	Glyph        string
+	Wing1        string
+	Wing2        string
+	RetiredSide  string
+	RetiredColor string
+	Ordering     uint
 }
 
 func GetCategories() ([]Category, error) {
@@ -34,6 +36,8 @@ func GetCategories() ([]Category, error) {
 			&category.Wing1,
 			&category.Wing2,
 			&category.Ordering,
+			&category.RetiredSide,
+			&category.RetiredColor,
 		)
 		if err != nil {
 			return nil, db_error(statement, nil, err)
@@ -58,6 +62,8 @@ func GetCategory(id uint) (*Category, error) {
 		&category.Wing1,
 		&category.Wing2,
 		&category.Ordering,
+		&category.RetiredSide,
+		&category.RetiredColor,
 	)
 
 	if err != nil {
@@ -70,7 +76,7 @@ func GetCategory(id uint) (*Category, error) {
 	return &category, nil
 }
 
-func CreateCategory(background, stripes, glyph, wing1, wing2 string) (*Category, error) {
+func CreateCategory(background, stripes, glyph, wing1, wing2, retired_side, retired_color string) (*Category, error) {
 	var category_count int
 	statement := "SELECT COUNT(*) FROM categories"
 	row := db.QueryRow(statement)
@@ -79,8 +85,8 @@ func CreateCategory(background, stripes, glyph, wing1, wing2 string) (*Category,
 		return nil, db_error(statement, nil, err)
 	}
 
-	statement = "INSERT INTO categories(background, stripes, glyph, wing1, wing2, ordering) VALUES(?,?,?,?,?,?)"
-	result, err := db.Exec(statement, background, stripes, glyph, wing1, wing2, category_count)
+	statement = "INSERT INTO categories(background, stripes, glyph, wing1, wing2, ordering, retired_side, retired_color) VALUES(?,?,?,?,?,?)"
+	result, err := db.Exec(statement, background, stripes, glyph, wing1, wing2, category_count, retired_side, retired_color)
 	if err != nil {
 		return nil, db_error(statement, nil, err)
 	}
@@ -94,6 +100,8 @@ func CreateCategory(background, stripes, glyph, wing1, wing2 string) (*Category,
 		glyph,
 		wing1,
 		wing2,
+		retired_side,
+		retired_color,
 		uint(category_count),
 	}
 	return &new_category, err

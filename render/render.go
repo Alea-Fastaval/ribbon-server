@@ -91,6 +91,14 @@ func Ribbon(ribbon database.Ribbon, category database.Category, glyph database.G
 		"background": category.Background,
 	}
 
+	// Add retired information
+	if ribbon.Retired {
+		svg_data["retired"] = map[string]string{
+			"side":  category.RetiredSide,
+			"color": category.RetiredColor,
+		}
+	}
+
 	// Render stripes
 	seniority_tmpl := FindYearTemplate(int(years), "seniority")
 
