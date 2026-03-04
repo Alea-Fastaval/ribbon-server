@@ -101,6 +101,9 @@ func Ribbon(ribbon database.Ribbon, category database.Category, glyph database.G
 
 	// Render stripes
 	seniority_tmpl := FindYearTemplate(int(years), "seniority")
+	if _, ok := ribbon.Special["no_seniority"]; ok {
+		seniority_tmpl = nil
+	}
 
 	if seniority_tmpl != nil {
 		seniority_data := map[string]interface{}{
