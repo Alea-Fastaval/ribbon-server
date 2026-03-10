@@ -139,7 +139,7 @@ func GetOrderByID(order_id uint) (map[string]any, error) {
 }
 
 func GetOrders(uid uint) (map[string]any, error) {
-	query := "SELECT * FROM ribbon_orders ro JOIN ribbons r ON ro.ribbon_id = r.id WHERE user_id = ? AND r.hidden = false"
+	query := "SELECT  ro.id, ro.user_id, ro.ribbon_id, ro.grunt, ro.second, ro.leader, ro.position FROM ribbon_orders ro JOIN ribbons r ON ro.ribbon_id = r.id WHERE user_id = ? AND r.hidden = false"
 	result, err := Query(query, []any{uid})
 	if err != nil {
 		return nil, err

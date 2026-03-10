@@ -232,7 +232,7 @@ func PNGFromOrder(order_id uint) (string, error) {
 
 	var stderr bytes.Buffer
 
-	cmd := exec.Command("/usr/bin/inkscape", "-z", "-w 250", "-h 84", "--export-png="+tmp_png, tmp_svg)
+	cmd := exec.Command("/usr/bin/inkscape", "-z", "-w 250", "-h 84", "--export-type=\"png\"", tmp_svg)
 	cmd.Stderr = &stderr
 
 	if e := cmd.Run(); e != nil {
