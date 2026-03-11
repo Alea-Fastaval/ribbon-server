@@ -2,7 +2,9 @@ package render
 
 import (
 	"fmt"
+	"log"
 	"math"
+	"slices"
 
 	"codeberg.org/go-pdf/fpdf"
 	"github.com/dreamspawn/ribbon-server/database"
@@ -24,10 +26,14 @@ func UserCollection(user user.User, pdf *fpdf.Fpdf) error {
 		return nil
 	}
 
-	ribbons_ordered := make([]map[string]any, len(ribbons))
+	var ribbons_ordered []map[string]any
 	for _, ribbon := range ribbons {
-		ribbons_ordered[ribbon["position"].(int64)] = ribbon
+		ribbons_ordered = append(ribbons_ordered, ribbon)
 	}
+
+	slices.SortFunc(ribbons_ordered, func(a, b map[string]any) int {
+		return int(a["position"].(int64) - b["position"].(int64))
+	})
 
 	settings := collection["settings"].(map[string]any)
 	columns := settings["columns"].(int64)
@@ -59,7 +65,7 @@ func UserCollection(user user.User, pdf *fpdf.Fpdf) error {
 	for _, order := range ribbons_ordered {
 		ribbon_png, err := PNGFromOrder(uint(order["id"].(int64)))
 		if err != nil {
-			fmt.Printf("Error rendering PNG from order %d:\n%v\n", order["id"], err)
+			log.Output(1, fmt.Sprintf("Error rendering PNG from order %d:\n%v\n", order["id"], err))
 			return err
 		}
 

@@ -95,6 +95,18 @@ func update(uid, ribbon uint, values map[string]uint, old_position int64) error 
 	return err
 }
 
+func GetOrderCount(year uint) (uint, error) {
+	query := "SELECT COUNT(*) FROM ribbon_orders o JOIN users u ON u.id = o.user_id WHERE u.year = ?"
+	row := db.QueryRow(query, year)
+	var count uint
+	err := row.Scan(&count)
+	if err != nil {
+		return 0, db_error(query, []any{year}, err)
+	}
+
+	return count, nil
+}
+
 func GetOrderByID(order_id uint) (map[string]any, error) {
 	var settings map[string]any
 

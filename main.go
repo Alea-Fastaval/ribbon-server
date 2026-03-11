@@ -60,10 +60,14 @@ func main() {
 	var ribbon_server = server.Server{}
 	ribbon_server.Start(config.Get("socket_path"))
 
+	defer func() {
+		recover()
+		ribbon_server.Stop()
+	}()
+
 	channel := make(chan os.Signal, 1)
 	signal.Notify(channel, os.Interrupt, syscall.SIGTERM)
 	<-channel
 
-	ribbon_server.Stop()
 	fmt.Println("")
 }

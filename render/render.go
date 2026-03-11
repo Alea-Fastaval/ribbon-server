@@ -208,14 +208,15 @@ func PNGFromOrder(order_id uint) (string, error) {
 			if time.Since(stats.ModTime()).Minutes() < 10 {
 				return tmp_png, nil
 			} else {
-				log.Output(1, fmt.Sprintf("Mod time of file %s was %f minutes ago\n", tmp_png, time.Since(stats.ModTime()).Minutes()))
+				//log.Output(1, fmt.Sprintf("Mod time of file %s was %f minutes ago\n", tmp_png, time.Since(stats.ModTime()).Minutes()))
 			}
 		} else {
 			log.Output(1, fmt.Sprintf("Error getting stats for file %s\n%v\n", tmp_png, err))
 		}
 	} else {
-		log.Output(1, fmt.Sprintf("Error opening file %s\n%v\n", tmp_png, err))
+		//log.Output(1, fmt.Sprintf("%s doesn't exist, creating new one\n", tmp_png))
 	}
+	log.Output(1, fmt.Sprintf("Exporting ribbon order %d\n", order_id))
 
 	svg_data, err := RibbonFromOrder(order_id)
 	if err != nil {
@@ -224,7 +225,7 @@ func PNGFromOrder(order_id uint) (string, error) {
 
 	svg_file, err := os.Create(tmp_svg)
 	if err != nil {
-		fmt.Printf("Error creating file %s\n", tmp_svg)
+		log.Output(1, fmt.Sprintf("Error creating file %s\n", tmp_svg))
 		return "", err
 	}
 	svg_file.Write([]byte(svg_data))
@@ -232,11 +233,11 @@ func PNGFromOrder(order_id uint) (string, error) {
 
 	var stderr bytes.Buffer
 
-	cmd := exec.Command("/usr/bin/inkscape", "-z", "-w 250", "-h 84", "--export-type=\"png\"", tmp_svg)
+	cmd := exec.Command("/usr/bin/inkscape", "-z", "-w", "250", "-h", "84", "--export-type=png", tmp_svg)
 	cmd.Stderr = &stderr
 
-	if e := cmd.Run(); e != nil {
-		err = fmt.Errorf("%s\nSTDERR:\n%s", e.Error(), stderr.String())
+	if err = cmd.Run(); err != nil {
+		err = fmt.Errorf("%s\nSTDERR:\n%s", err.Error(), stderr.String())
 		return "", err
 	}
 
